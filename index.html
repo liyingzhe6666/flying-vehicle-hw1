@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>陆地航母：一架被装进后备箱的航空器｜飞行汽车技术基础·课程作业</title>
+<meta name="description" content="以小鹏汇天陆地航母 X3-F 为研究对象的全方位调研：系统架构、审定包线、一阶能量模型、应用场景、市场可行性、竞品与风险矩阵。">
+<meta name="author" content="飞行汽车技术基础 · 课程作业">
+<meta property="og:title" content="陆地航母：一架被装进后备箱的航空器">
+<meta property="og:description" content="当宣传口径遇上审定包线：20 公里、20 分钟、120 米，才是这架飞行器的真实尺度。">
+<meta property="og:type" content="article">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23F5F2EA'/%3E%3Cpath d='M16 4 L16 28 M4 16 L28 16 M8 8 L24 24 M24 8 L8 24' stroke='%23C2410C' stroke-width='1.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23191B1E'/%3E%3C/svg%3E">
+<style>
+/* ============ tokens ============ */
+:root{
+  /* 冷灰绿测试纸：从米色系整体移开 */
+  --paper:#EAECE6;
+  --paper-2:#DEE1D9;
+  --surface:#FCFCFA;
+  --ink:#121614;
+  --ink-2:#38413D;
+  --muted:#5C645F;
+  --rule:#C4CAC2;
+  --rule-2:#D8DCD4;
+
+  /* 仪表盘黑 */
+  --panel:#171C1B;
+  --panel-2:#222927;
+  --on:#EDEFE9;
+  --on-2:#9CA69F;
+  --rule-on:#39413E;
+
+  /* 语义色：只为四种含义存在 */
+  --redline:#C41E28;        /* 限制 / 冲突 / 超界 */
+  --redline-lit:#E4444D;    /* 深底上的同色相提亮 */
+  --redline-soft:#F2DCDD;
+  --caution:#7A5600;        /* 存疑 / 待验证 */
+  --caution-soft:#EEE2C4;
+  --normal:#1B6047;         /* 已获证 / 可运行 */
+  --normal-soft:#D6E3DB;
+  --data:#0F4C55;           /* 引用 / 外链 / 次级数据 */
+
+  /* 旧变量名保留为别名，避免残留规则失效 */
+  --accent:var(--ink);
+  --accent-2:var(--redline);
+  --accent-soft:var(--paper-2);
+  --teal:var(--data);
+  --teal-soft:#D9E4E4;
+  --amber:var(--caution);
+  --amber-soft:var(--caution-soft);
+  --red:var(--redline);
+  --red-soft:var(--redline-soft);
+  --green:var(--normal);
+  --green-soft:var(--normal-soft);
+  --card:var(--surface);
+
+  --sans:Bahnschrift,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --num:Bahnschrift,Consolas,"Liberation Mono",monospace;
+  --mono:Consolas,"Liberation Mono",monospace;
+  --w:1120px;
+  --bar-h:52px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--bar-h) + 28px)}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16.5px;line-height:1.85;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+::selection{background:var(--ink);color:var(--paper)}
+a{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule);transition:color .15s,border-color .15s}
+a:hover{color:var(--data);border-bottom-color:var(--data)}
+img,svg{max-width:100%}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:var(--paper);padding:10px 16px;z-index:100}
+.skip:focus{left:12px;top:12px}
+
+/* ============ 顶部仪表面板 ============ */
+.progress{position:fixed;left:0;top:calc(var(--bar-h) - 2px);height:2px;width:0;background:var(--on);z-index:81;transition:width .1s linear}
+.topbar{position:fixed;top:0;left:0;right:0;height:var(--bar-h);z-index:80;background:var(--panel);color:var(--on)}
+.topbar-in{max-width:var(--w);margin:0 auto;height:100%;padding:0 28px;display:flex;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;gap:9px;border:0;font-size:12.5px;font-weight:600;color:var(--on);white-space:nowrap;letter-spacing:.01em}
+.brand svg{width:15px;height:15px;flex:0 0 auto}
+.brand b{font-weight:600}
+.cur{display:flex;align-items:center;gap:11px;font-size:11.5px;color:var(--on-2);min-width:0}
+.cur::before{content:"";width:1px;height:13px;background:var(--rule-on);flex:0 0 auto}
+.cur b{color:var(--on);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-meta{margin-left:auto;display:flex;align-items:center;gap:16px;font-family:var(--num);font-size:10.5px;color:var(--on-2);letter-spacing:.02em;white-space:nowrap}
+.menu-btn{display:none;border:1px solid var(--rule-on);background:transparent;color:var(--on);padding:5px 10px;font-size:11px;border-radius:2px;cursor:pointer}
+.menu-btn:hover{border-color:var(--on-2)}
+@media(max-width:1359px){.menu-btn{display:inline-block}}
+@media(max-width:900px){.cur{display:none}}
+@media(max-width:820px){.doc-meta .hide-s{display:none}}
+
+.rail{position:fixed;left:22px;top:50%;transform:translateY(-50%);z-index:60;display:none;flex-direction:column;gap:1px;opacity:0;transition:opacity .35s ease}
+body:not(.at-cover) .rail{opacity:1}
+body.at-cover .rail{pointer-events:none}
+@media(min-width:1360px){.rail{display:flex}}
+.rail a{display:flex;align-items:center;gap:8px;border:0;padding:4px 0;font-size:10.5px;color:var(--muted);opacity:.55;transition:opacity .18s,color .18s}
+.rail a .n{font-family:var(--num);font-size:10px;width:15px;text-align:right;letter-spacing:.02em}
+.rail a .bar{width:0;height:1px;background:var(--ink);transition:width .2s}
+.rail a .t{white-space:nowrap}
+.rail a:hover{opacity:.85}
+.rail a.on{opacity:1;color:var(--ink)}
+.rail a.on .bar{width:11px}
+@media(max-height:720px){.rail{gap:0}.rail a{padding:2px 0;font-size:10px}}
+
+.overlay{position:fixed;inset:0;background:var(--panel);color:var(--on);z-index:95;display:none;padding:84px 28px 40px;overflow:auto}
+.overlay.open{display:block}
+.overlay ol{list-style:none;margin:0 auto;padding:0;max-width:560px}
+.overlay li{border-bottom:1px solid var(--rule-on)}
+.overlay a{display:flex;justify-content:flex-start;align-items:baseline;gap:20px;border:0;padding:15px 0;font-size:21px;font-weight:600;color:var(--on);letter-spacing:-.01em}
+.overlay a span{flex:0 0 28px;font-family:var(--num);font-size:10.5px;font-weight:400;color:var(--on-2);letter-spacing:.02em}
+.overlay .close{position:absolute;top:13px;right:22px;background:none;border:1px solid var(--rule-on);color:var(--on);padding:7px 12px;font-size:11px;border-radius:2px;cursor:pointer}
+
+main{position:relative;z-index:1;max-width:var(--w);margin:0 auto;padding:0 28px}
+@media(max-width:600px){main{padding:0 20px}}
+
+/* ============ 封面 ============ */
+.cover{position:relative;color:var(--on);padding:calc(var(--bar-h) + 64px) 0 56px;min-height:100svh;display:flex;flex-direction:column;justify-content:center}
+.cover::before{content:"";position:absolute;inset:0 calc(50% - 50vw);background:var(--panel);z-index:-1}
+.eyebrow{display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--on-2);margin-bottom:10px;letter-spacing:.02em}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--rule-on);flex:0 0 auto}
+.byline{font-family:var(--num);font-size:11px;color:var(--on-2);letter-spacing:.04em;margin:0 0 30px;padding-left:38px}
+.cover-grid{display:grid;grid-template-columns:1.06fr .94fr;gap:46px;align-items:center}
+@media(max-width:940px){.cover-grid{grid-template-columns:1fr;gap:30px}}
+h1{font-size:clamp(52px,7.4vw,92px);line-height:.94;letter-spacing:-.05em;font-weight:700;margin:0;color:var(--on)}
+h1 .thin{font-weight:inherit}
+.hero-sub{display:flex;align-items:baseline;gap:12px;margin-top:20px}
+.hero-sub .cn{font-size:clamp(19px,2.2vw,26px);font-weight:500;letter-spacing:.01em;color:var(--on)}
+.hero-sub .line{flex:1;height:1px;background:var(--rule-on);max-width:70px}
+.hero-sub .en{font-family:var(--num);font-size:10.5px;color:var(--on-2);letter-spacing:.04em}
+.lede{margin:26px 0 0;max-width:30em;font-size:16px;line-height:1.95;color:var(--on-2)}
+.lede strong{font-weight:600;color:var(--on);box-shadow:inset 0 -.5em 0 rgba(228,68,77,.22)}
+.cover-meta{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:26px;font-size:11.5px;color:var(--on-2)}
+.cover-meta b{color:var(--on);font-weight:500}
+.cover-meta span{display:inline-flex;gap:7px}
+.hero-art{position:relative;border:1px solid var(--rule-on);background:var(--surface);
+  background-image:linear-gradient(var(--rule-2) 1px,transparent 1px),linear-gradient(90deg,var(--rule-2) 1px,transparent 1px);
+  background-size:24px 24px;background-position:center;padding:12px;margin:0}
+.hero-art .tag{position:absolute;top:12px;left:14px;font-family:var(--num);font-size:9.5px;color:var(--muted);z-index:2;letter-spacing:.03em}
+.hero-art svg{display:block;width:100%;height:auto}
+.art-cap{margin-top:9px;font-family:var(--num);font-size:10px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
+
+/* 审定 / 宣传 对照 */
+.env-pairs{margin-top:50px;border-top:2px solid var(--redline-lit);padding-top:16px}
+.ep-label{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;font-size:11px;color:var(--on-2);margin-bottom:18px}
+.ep-label .red{color:#F26A70;font-weight:600;letter-spacing:.08em}
+.ep-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule-on)}
+.ep{background:var(--panel);padding:14px 18px 16px}
+.ep .pv{font-family:var(--num);font-stretch:88%;font-size:clamp(28px,3.3vw,40px);line-height:1;letter-spacing:-.01em;color:var(--on);font-feature-settings:"tnum"}
+.ep .pv .u{font-size:.4em;font-stretch:100%;letter-spacing:.03em;color:var(--on-2);margin-left:5px;font-weight:400}
+.ep .pc{font-size:12px;color:var(--on-2);margin-top:11px}
+.ep .pc b{font-family:var(--num);font-weight:400;color:#BCC5BF}
+@supports (-webkit-text-stroke:1px #000){
+  .ep .pc b{color:transparent;-webkit-text-stroke:.85px #C6CFC9}
+}
+.ep .pk{font-size:11px;color:var(--on-2);margin-top:2px;opacity:.8}
+@media(max-width:760px){.ep-grid{grid-template-columns:1fr 1fr}.ep{padding:12px 14px 14px}}
+@media(max-width:420px){.ep .pv{font-size:26px}.ep .pc{font-size:11px}}
+
+/* ============ 章节 ============ */
+section{padding:92px 0 96px}
+.sec-head{position:relative;display:grid;grid-template-columns:76px minmax(0,1fr);gap:0 18px;margin-bottom:40px;padding-top:34px}
+.sec-head::before{content:"";position:absolute;left:0;top:0;width:56px;height:2px;background:var(--ink)}
+.sec-num{font-family:var(--num);font-stretch:86%;font-size:38px;line-height:1;color:var(--muted);padding-top:3px;letter-spacing:-.02em}
+h2{font-size:clamp(26px,3vw,34px);line-height:1.24;letter-spacing:-.022em;font-weight:700;margin:0}
+.dek{margin:13px 0 0;color:var(--ink-2);font-size:15px;line-height:1.8;max-width:44em}
+@media(max-width:600px){
+  section{padding:56px 0 60px}
+  .sec-head{grid-template-columns:38px 1fr;gap:0 10px;padding-top:24px;margin-bottom:26px}
+  .sec-head::before{width:34px}
+  .sec-num{font-size:24px}
+  .dek{font-size:14px}
+}
+
+.prose{max-width:640px}
+.prose p{margin:0 0 1.05em;font-size:16.5px;line-height:1.95;text-align:justify;text-justify:inter-ideograph}
+.prose p:last-child{margin-bottom:0}
+.prose .en{font-size:12px;line-height:1.7;color:var(--muted);margin:-.6em 0 1.5em;text-align:left;letter-spacing:.01em}
+.prose h3{font-size:20px;font-weight:700;line-height:1.4;margin:36px 0 10px;letter-spacing:-.01em}
+.prose h4{font-size:14.5px;font-weight:600;margin:24px 0 6px;color:var(--ink)}
+.prose ul,.prose ol{margin:0 0 1.2em;padding-left:1.2em}
+.prose li{margin:5px 0;line-height:1.9}
+.prose strong{font-weight:600}
+.prose em{font-style:normal;box-shadow:inset 0 -.5em 0 var(--paper-2)}
+sup.ref{font-family:var(--num);font-size:9px;line-height:0;vertical-align:super;margin-left:1px}
+sup.ref a{border:0;color:var(--data)}
+
+.cols{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:52px;align-items:start}
+@media(max-width:920px){.cols{grid-template-columns:1fr;gap:26px}}
+.side{border-top:2px solid var(--ink);padding-top:13px}
+.side .k{font-size:10.5px;font-weight:600;color:var(--muted);margin-bottom:9px;letter-spacing:.02em}
+.side p{font-size:13px;line-height:1.8;color:var(--ink-2);margin:0 0 9px}
+.side p:last-child{margin:0}
+.side .big{font-family:var(--num);font-stretch:88%;font-size:30px;line-height:1.15;margin:2px 0 8px}
+.side .bar-row{grid-template-columns:92px minmax(0,1fr) 64px;gap:8px}
+.side .bar-row .lab{font-size:11px}
+.side .bar-row .lab small{font-size:9px}
+.side .bar-row .val{font-size:10px}
+
+.note{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--ink);padding:18px 22px;margin:26px 0}
+.note .lbl{font-size:10.5px;font-weight:600;color:var(--ink);margin-bottom:7px;letter-spacing:.02em}
+.note p{margin:0;font-size:13.5px;line-height:1.85;color:var(--ink-2)}
+.note p+p{margin-top:8px}
+.note.teal{border-left-color:var(--data)}
+.note.teal .lbl{color:var(--data)}
+.note.ink{border-left-color:var(--ink)}
+
+.pull{margin:38px 0;padding:0 0 0 24px;border-left:3px solid var(--ink)}
+.pull blockquote{margin:0;font-size:clamp(20px,2.6vw,27px);line-height:1.55;font-weight:600;letter-spacing:-.02em}
+.pull .src{margin-top:11px;font-size:11px;color:var(--muted)}
+
+/* ============ 图版 ============ */
+.fig{margin:34px 0 32px}
+.fig-bar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:9px;font-family:var(--num);font-size:10.5px;color:var(--muted);letter-spacing:.02em}
+.fig-bar b{color:var(--ink);font-weight:600}
+.fig-frame{border:1px solid var(--ink);background:var(--surface);overflow:hidden}
+.fig-frame.pad{padding:20px}
+.fig svg{display:block;width:100%;height:auto}
+figcaption{margin-top:9px;font-size:12px;line-height:1.7;color:var(--muted);max-width:76ch}
+figcaption b{color:var(--ink-2);font-weight:600}
+.fig-actions{display:flex;gap:6px;flex-wrap:wrap}
+.fig-actions button{border:1px solid var(--rule);background:var(--surface);padding:4px 9px;font-family:var(--num);font-size:10px;cursor:pointer;color:var(--muted);border-radius:2px}
+.fig-actions button:hover{border-color:var(--ink-2);color:var(--ink)}
+.fig-actions button.on{border-color:var(--ink);background:var(--ink);color:var(--surface)}
+
+/* ============ 表格 ============ */
+.tablewrap{margin:24px 0 28px;overflow-x:auto;border:1px solid var(--ink);background:var(--surface);-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+thead th{font-size:11px;font-weight:600;color:var(--ink);text-align:left;padding:10px 13px;border-bottom:1px solid var(--ink);white-space:nowrap;background:var(--surface)}
+tbody td{padding:11px 13px;border-bottom:1px solid var(--rule-2);vertical-align:top;line-height:1.65}
+tbody tr:hover{background:rgba(18,22,20,.03)}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{font-family:var(--num);font-variant-numeric:tabular-nums;font-feature-settings:"tnum";white-space:nowrap}
+td.k{font-weight:600;white-space:nowrap}
+.table-note{font-size:11.5px;color:var(--muted);line-height:1.65;margin:-16px 0 26px;max-width:74ch}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:1px 6px;border:1px solid currentColor;white-space:nowrap;line-height:1.6;border-radius:2px}
+.chip.g{color:var(--normal);background:var(--normal-soft)}
+.chip.a{color:var(--caution);background:var(--caution-soft)}
+.chip.r{color:var(--redline);background:var(--redline-soft)}
+.chip.t{color:var(--data);background:#D9E4E4}
+.chip.m{color:var(--muted);background:transparent}
+.chip.o{color:var(--ink);background:var(--paper-2)}
+
+/* ============ 组合块 ============ */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--ink);border:1px solid var(--ink);margin:28px 0}
+.grid-3 .cell{background:var(--surface);padding:20px}
+.grid-3 .cell .k{font-size:10.5px;font-weight:600;color:var(--muted);margin-bottom:7px}
+.grid-3 .cell h4{margin:0 0 5px;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.grid-3 .cell p{margin:0;font-size:12.5px;line-height:1.75;color:var(--ink-2)}
+@media(max-width:760px){.grid-3{grid-template-columns:1fr}}
+
+.verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule-on);border:1px solid var(--panel);margin:30px 0}
+.verdict .v{background:var(--panel);padding:24px 22px}
+.verdict .v .k{font-size:10.5px;font-weight:600;color:var(--on-2)}
+.verdict .v .s{font-size:26px;font-weight:700;margin:7px 0 6px;letter-spacing:-.02em;color:var(--on)}
+.verdict .v .s.g{color:#8ACBAE}
+.verdict .v .s.a{color:#E2B75F}
+.verdict .v .s.r{color:var(--redline-lit)}
+.verdict .v p{margin:0;font-size:12.5px;line-height:1.7;color:var(--on-2)}
+@media(max-width:760px){.verdict{grid-template-columns:1fr}}
+
+.timeline{list-style:none;margin:28px 0 0;padding:0;position:relative}
+.timeline::before{content:"";position:absolute;left:4px;top:6px;bottom:6px;width:1px;background:var(--rule)}
+.timeline li{position:relative;padding:0 0 22px 28px}
+.timeline li::before{content:"";position:absolute;left:0;top:6px;width:9px;height:9px;border:1px solid var(--ink);background:var(--paper)}
+.timeline li.key::before{background:var(--ink)}
+.timeline .t{font-family:var(--num);font-size:11px;font-weight:600;color:var(--ink);margin-bottom:1px}
+.timeline .h{font-weight:600;font-size:14.5px;line-height:1.5}
+.timeline .d{font-size:12.5px;line-height:1.7;color:var(--muted);margin-top:2px}
+.timeline .chip{margin-top:5px}
+
+/* 热力图：墨色单色梯度，只有最差一档落红 */
+.hm td{text-align:center;font-family:var(--num);font-size:11px;padding:7px 6px;border-left:1px solid var(--surface)}
+.hm th{text-align:center;white-space:normal;line-height:1.4}
+.hm th:first-child,.hm td:first-child{text-align:left;font-family:var(--sans);font-size:12.5px;white-space:nowrap;padding-left:13px}
+.hm th:last-child,.hm td:last-child{border-left:1px solid var(--ink);background:var(--paper-2)}
+.s5{background:#17322A;color:#E8EFEA}
+.s4{background:#4C7565;color:#F5F9F6}
+.s3{background:#A7B3AC;color:var(--ink)}
+.s2{background:#CFD6D0;color:var(--ink-2)}
+.s1{background:#EFD9D9;color:#AE1A22}
+.hm .score{font-weight:600;font-size:12px}
+
+/* ============ 模型面板 ============ */
+.model{border:1px solid var(--ink);background:var(--surface);margin:28px 0}
+.model-top{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+@media(max-width:860px){.model-top{grid-template-columns:1fr}}
+.model-chart{padding:14px 10px 4px;border-right:1px solid var(--rule)}
+.model-mhint{display:none}
+.model-panel{padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+.model-panel .k{font-size:10.5px;font-weight:600;color:var(--muted)}
+.ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-bottom:6px}
+.ctrl label b{font-family:var(--num);font-size:13px;color:var(--ink)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--rule);outline:none;margin:8px 0 4px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--ink);border:0;border-radius:50%;cursor:ew-resize}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;background:var(--ink);border:0;border-radius:50%;cursor:ew-resize}
+.ctrl .scale{display:flex;justify-content:space-between;font-family:var(--num);font-size:9.5px;color:var(--muted)}
+.readouts{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px solid var(--rule);padding-top:14px}
+.ro .l{font-size:10px;color:var(--muted)}
+.ro .v{font-family:var(--num);font-stretch:90%;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.3}
+.ro .v small{font-size:9.5px;font-stretch:100%;color:var(--muted)}
+.ro.warn .v{color:var(--redline)}
+.model-foot{border-top:1px solid var(--rule);padding:9px 22px;font-family:var(--num);font-size:10px;color:var(--muted);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+
+/* ============ 条形图 ============ */
+.bars{margin:24px 0 8px}
+.bar-row{display:grid;grid-template-columns:150px minmax(0,1fr) 110px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule-2)}
+.bar-row .lab{font-size:12.5px;line-height:1.4}
+.bar-row .lab small{display:block;font-family:var(--num);font-size:9.5px;color:var(--muted);letter-spacing:.02em}
+.bar-track{height:14px;background:var(--paper-2);position:relative;overflow:hidden}
+.bar-fill{height:100%;background:var(--ink);width:0;transition:width .9s cubic-bezier(.2,.7,.2,1)}
+.bar-fill.t{background:var(--data)}
+.bar-fill.a{background:var(--caution)}
+.bar-fill.h{background:repeating-linear-gradient(45deg,#B7BCB5,#B7BCB5 2px,transparent 2px,transparent 5px)}
+.bars + .table-note{margin-top:18px}
+.bar-row .val{font-family:var(--num);font-size:11.5px;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:640px){.bar-row{grid-template-columns:104px minmax(0,1fr) 72px;gap:8px}.bar-row .val{font-size:10px}}
+
+/* ============ 杂项 ============ */
+.kv{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--num);font-size:10.5px;color:var(--muted);margin:14px 0}
+.kv b{color:var(--ink);font-weight:600}
+.hr{height:1px;background:var(--rule);margin:32px 0}
+.small{font-size:12px;line-height:1.75;color:var(--muted)}
+.center{text-align:center}
+.mt0{margin-top:0}.mb0{margin-bottom:0}
+
+footer{border-top:2px solid var(--ink);padding:60px 0 46px;margin-top:20px}
+.refs{display:block}
+.refs h3{font-size:11px;font-weight:600;color:var(--ink);margin:0 0 16px;letter-spacing:.02em}
+.refs ol{list-style:none;margin:0;padding:0;counter-reset:r;column-count:2;column-gap:44px}
+@media(max-width:760px){.refs ol{column-count:1}}
+.refs li{position:relative;padding:0 0 11px 28px;font-size:12px;line-height:1.7;color:var(--ink-2);break-inside:avoid}
+.refs li::before{counter-increment:r;content:"["counter(r)"]";position:absolute;left:0;top:0;font-family:var(--num);font-size:10.5px;color:var(--muted)}
+.refs a{overflow-wrap:anywhere;border-bottom-color:var(--rule-2);color:var(--data)}
+.colophon{margin-top:40px;padding-top:16px;border-top:1px solid var(--ink);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.colophon .fill{border-bottom:1px dashed var(--rule);min-width:90px;display:inline-block}
+
+.rv{opacity:0;transform:translateY(12px);transition:opacity .6s ease,transform .6s ease}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rv{opacity:1;transform:none;transition:none}
+  .bar-fill{transition:none}
+  *{animation:none!important}
+}
+
+/* mobile overrides —— 放在最后以赢得级联 */
+.env-mobile{display:none;padding:15px 13px 11px;border-bottom:1px solid var(--ink);background:var(--surface)}
+.env-mobile table{width:100%;min-width:0;font-size:12.5px}
+.env-mobile th{font-size:10px;font-weight:600;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--ink);background:transparent;white-space:normal}
+.env-mobile td{padding:8px;border-bottom:1px solid var(--rule-2);font-family:var(--num);font-size:12px}
+.env-mobile td:first-child{font-family:var(--sans);color:var(--ink-2)}
+.env-mobile .t{color:var(--data)}
+.env-mobile .o{color:var(--redline)}
+.env-mobile p{margin:8px 0 0;font-size:10px;color:var(--muted)}
+@media(max-width:820px){
+  .fig-frame{overflow-x:auto;overflow-y:hidden}
+  .fig-frame>svg{min-width:820px}
+  #envChart{display:none}
+  #mapChart{min-width:0}
+  .fig-actions{display:none}
+  .model-chart{overflow:visible}
+  .model-chart>svg{min-width:0}
+  .model-mhint{display:block;font-size:9.5px;line-height:1.6;color:var(--muted);padding:2px 6px 0}
+  .env-mobile{display:block}
+}
+@media(max-width:600px){
+  .hero-sub{flex-wrap:wrap;gap:4px}
+  .hero-sub .line{display:none}
+  .hero-sub .cn{width:100%}
+  .hero-sub .en{width:100%;margin-top:2px}
+}
+@media print{
+  .topbar,.rail,.progress,.overlay,.menu-btn,.fig-actions,.ctrl{display:none!important}
+  body{background:#fff;font-size:11pt}
+  main{max-width:100%;padding:0}
+  section{padding:24px 0;break-inside:avoid}
+  .rv{opacity:1;transform:none}
+  a{text-decoration:none;border:0}
+
+  /* 封面：黑面板转白底，线图缩到半幅 */
+  .cover{min-height:auto;padding:0 0 12px;color:#000}
+  .cover::before{display:none}
+  .cover-grid{grid-template-columns:1.06fr .94fr;gap:22px}
+  .cover h1,.cover .hero-sub .cn,.cover .cover-meta b{color:#000}
+  .cover .lede,.cover .cover-meta,.cover .hero-sub .en,.cover .eyebrow,.cover .byline{color:#333}
+  .cover .byline{padding-left:0}
+  .cover .lede strong{color:#000;box-shadow:none;font-weight:700}
+  .hero-art{border-color:#bbb;background:#fff;background-image:none}
+  .hero-art .tag,.art-cap{color:#666}
+  .hero-art svg{width:auto;max-width:100%;max-height:250px;margin:0 auto}
+
+  /* 审定 / 宣传 对照：保留论点，去掉深色 */
+  .env-pairs{border-top-color:#000;margin-top:22px;padding-top:10px}
+  .ep-label{color:#333}
+  .ep-label .red{color:#000}
+  .ep-grid{gap:0;background:transparent;border-top:1px solid #bbb}
+  .ep{background:#fff;border-right:1px solid #ddd;border-bottom:1px solid #ddd;padding:8px 10px}
+  .ep:last-child{border-right:0}
+  .ep .pv,.ep .pv .u{color:#000}
+  .ep .pc,.ep .pc b,.ep .pk{color:#333;opacity:1;-webkit-text-stroke:0}
+
+  /* 深色结论块转白 */
+  .verdict{border-color:#bbb;background:#ddd}
+  .verdict .v{background:#fff}
+  .verdict .v .s,.verdict .v .s.g,.verdict .v .s.a,.verdict .v .s.r{color:#000}
+  .verdict .v .k,.verdict .v p{color:#333}
+
+  .note,.model,.fig-frame,.tablewrap{background:#fff}
+}
+</style>
+<noscript><style>.rv{opacity:1!important;transform:none!important}</style></noscript>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<div class="progress" id="progress"></div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#cover" aria-label="回到封面">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.15"><path d="M12 3.2v17.6M4.4 7.6l15.2 8.8M4.4 16.4l15.2-8.8"/></g><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>
+      <span><b>飞行汽车技术基础</b><span class="hide-s">／课程作业</span></span>
+    </a>
+    <div class="cur"><b id="curClause">封面</b></div>
+    <div class="doc-meta">
+      <span class="hide-s">FVT-2026-11</span>
+      <span class="hide-s">截止 2026-11-17</span>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="overlay">目录</button>
+    </div>
+  </div>
+</header>
+
+<nav class="rail" id="rail" aria-label="章节导航"></nav>
+
+<div class="overlay" id="overlay">
+  <button class="close" id="closeBtn">关闭 ×</button>
+  <ol id="overlayList"></ol>
+</div>
+
+<main id="main">
+<noscript><div style="margin:20px 0;padding:14px 16px;border:1px solid #C4CAC2;background:#FCFCFA;font-size:12px;color:#38413D;line-height:1.7">本页的交互图表由 JavaScript 绘制；文字、表格与关键数据在无脚本状态下仍可阅读。</div></noscript>
+
+<!-- ================= COVER ================= -->
+<section class="cover" id="cover" style="border-top:0">
+  <div class="eyebrow">飞行汽车技术基础／案例研究　Fundamentals of Flying Vehicle Technology</div>
+  <div class="byline">李英喆　学号 15231015</div>
+  <div class="cover-grid">
+    <div>
+      <h1>陆地<br>航母</h1>
+      <div class="hero-sub">
+        <span class="cn">一架被装进后备箱的航空器</span>
+        <span class="line"></span>
+        <span class="en">Aircraft in a trunk</span>
+      </div>
+      <p class="lede">到 2026 年 11 月，小鹏汇天已经把一架两座飞行器折叠进六轮汽车的后舱，并把产线设计节拍压到 30 分钟一台。但它的型号合格证仍在局方待颁，专用条件把它限定在 <strong>120 米、20 公里、昼间目视</strong>。这不是一辆会飞的车，而是一架被汽车携带、被 LSA 规则重新定义的航空器。</p>
+      <div class="cover-meta">
+        <span>对象 <b>小鹏汇天 陆地航母 / X3-F</b></span>
+        <span>方法 <b>证据分级、系统边界、一阶建模</b></span>
+        <span>结论 <b>窄众可行，通勤不成立</b></span>
+      </div>
+    </div>
+
+    <figure class="hero-art" aria-label="X3-F 展开状态俯视示意图">
+      <span class="tag">FIG.00 / TOP VIEW / NOT TO SCALE</span>
+      <svg viewBox="0 0 600 640" role="img" aria-labelledby="heroArtTitle">
+        <title id="heroArtTitle">X3-F 六轴十二桨飞行体展开状态俯视示意图，标注展开尺寸 6834 毫米乘 6340 毫米</title>
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#38413D"/>
+          </marker>
+        </defs>
+        <g stroke="#121614" fill="none" stroke-width="1.2">
+          <g transform="rotate(0 300 310)">
+            <path d="M292 272 L295 174 L305 174 L308 272 Z" fill="#EAECE6"/>
+            <circle cx="300" cy="160" r="58"/>
+            <circle cx="300" cy="160" r="49" stroke-width=".8"/>
+            <g stroke-width="2.4" stroke-linecap="round">
+              <path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/>
+            </g>
+            <g stroke-width="1.6" stroke-linecap="round" opacity=".42" transform="rotate(60 300 160)">
+              <path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/>
+            </g>
+            <circle cx="300" cy="160" r="6.5" fill="#121614"/>
+          </g>
+          <g transform="rotate(60 300 310)">
+            <path d="M292 272 L295 174 L305 174 L308 272 Z" fill="#EAECE6"/>
+            <circle cx="300" cy="160" r="58"/><circle cx="300" cy="160" r="49" stroke-width=".8"/>
+            <g stroke-width="2.4" stroke-linecap="round"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <g stroke-width="1.6" stroke-linecap="round" opacity=".42" transform="rotate(60 300 160)"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <circle cx="300" cy="160" r="6.5" fill="#121614"/>
+          </g>
+          <g transform="rotate(120 300 310)">
+            <path d="M292 272 L295 174 L305 174 L308 272 Z" fill="#EAECE6"/>
+            <circle cx="300" cy="160" r="58"/><circle cx="300" cy="160" r="49" stroke-width=".8"/>
+            <g stroke-width="2.4" stroke-linecap="round"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <g stroke-width="1.6" stroke-linecap="round" opacity=".42" transform="rotate(60 300 160)"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <circle cx="300" cy="160" r="6.5" fill="#121614"/>
+          </g>
+          <g transform="rotate(180 300 310)">
+            <path d="M292 272 L295 174 L305 174 L308 272 Z" fill="#EAECE6"/>
+            <circle cx="300" cy="160" r="58"/><circle cx="300" cy="160" r="49" stroke-width=".8"/>
+            <g stroke-width="2.4" stroke-linecap="round"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <g stroke-width="1.6" stroke-linecap="round" opacity=".42" transform="rotate(60 300 160)"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <circle cx="300" cy="160" r="6.5" fill="#121614"/>
+          </g>
+          <g transform="rotate(240 300 310)">
+            <path d="M292 272 L295 174 L305 174 L308 272 Z" fill="#EAECE6"/>
+            <circle cx="300" cy="160" r="58"/><circle cx="300" cy="160" r="49" stroke-width=".8"/>
+            <g stroke-width="2.4" stroke-linecap="round"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <g stroke-width="1.6" stroke-linecap="round" opacity=".42" transform="rotate(60 300 160)"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <circle cx="300" cy="160" r="6.5" fill="#121614"/>
+          </g>
+          <g transform="rotate(300 300 310)">
+            <path d="M292 272 L295 174 L305 174 L308 272 Z" fill="#EAECE6"/>
+            <circle cx="300" cy="160" r="58"/><circle cx="300" cy="160" r="49" stroke-width=".8"/>
+            <g stroke-width="2.4" stroke-linecap="round"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <g stroke-width="1.6" stroke-linecap="round" opacity=".42" transform="rotate(60 300 160)"><path d="M300 160 L300 116"/><path d="M300 160 L338 182"/><path d="M300 160 L262 182"/></g>
+            <circle cx="300" cy="160" r="6.5" fill="#121614"/>
+          </g>
+          <path d="M300 208 C 328 208 342 232 342 262 L342 368 C342 400 325 416 300 416 C275 416 258 400 258 368 L258 262 C258 232 272 208 300 208 Z" fill="#EAECE6" stroke-width="1.4"/>
+          <path d="M300 230 C 319 230 329 247 329 268 L329 322 C329 342 316 352 300 352 C284 352 271 342 271 322 L271 268 C271 247 281 230 300 230 Z" fill="#D9E4E4" fill-opacity=".55" stroke-width=".9"/>
+          <circle cx="288" cy="302" r="8" stroke-width=".9"/>
+          <circle cx="312" cy="302" r="8" stroke-width=".9"/>
+          <circle cx="300" cy="220" r="3" fill="#38413D" stroke="none"/>
+        </g>
+
+        <g stroke="#38413D" stroke-width=".9" fill="none">
+          <path d="M114 441 L114 572 M486 441 L486 572 M114 562 L486 562" marker-start="url(#ar)" marker-end="url(#ar)"/>
+          <path d="M486 104 L556 104 M486 516 L556 516 M548 104 L548 516" marker-start="url(#ar)" marker-end="url(#ar)"/>
+          <path d="M352 96 L322 132" stroke-dasharray="2 3"/>
+          <path d="M170 300 L244 306" stroke-dasharray="2 3"/>
+        </g>
+        <g fill="#38413D" font-family="Consolas,monospace" font-size="11" letter-spacing=".06em">
+          <text x="300" y="552" text-anchor="middle">6 834 mm</text>
+          <text x="540" y="310" text-anchor="middle" transform="rotate(-90 540 310)">6 340 mm</text>
+        </g>
+        <g fill="#38413D" font-family="Consolas,monospace" font-size="9.5" letter-spacing=".04em">
+          <text x="358" y="90">六轴十二桨 · 双涵道</text>
+          <text x="30" y="292">270° 双人座舱</text>
+        </g>
+        <g stroke="#C4CAC2" stroke-width="1">
+          <path d="M18 18 h12 M18 18 v12 M582 18 h-12 M582 18 v12 M18 622 h12 M18 622 v-12 M582 622 h-12 M582 622 v-12"/>
+        </g>
+      </svg>
+      <div class="art-cap"><span>展开 6 834 × 6 340 × 1 923 mm</span><span>折叠 2 934 × 1 777 × 1 312 mm</span></div>
+    </figure>
+  </div>
+
+  <div class="env-pairs">
+    <div class="ep-label"><span class="red">审定包线</span><span>专用条件与型号合格证数据；右侧为宣传口径，仅供对照</span></div>
+    <div class="ep-grid">
+      <div class="ep">
+        <div class="pv">20<span class="u">km</span></div>
+        <div class="pc">宣传 <b>30 km</b></div>
+        <div class="pk">最大航程</div>
+      </div>
+      <div class="ep">
+        <div class="pv">20<span class="u">min</span></div>
+        <div class="pc">宣传 <b>30 min</b></div>
+        <div class="pk">最长航时</div>
+      </div>
+      <div class="ep">
+        <div class="pv">120<span class="u">m</span></div>
+        <div class="pc">宣传 <b>1,000 m</b></div>
+        <div class="pk">升限 AGL</div>
+      </div>
+      <div class="ep">
+        <div class="pv">72<span class="u">km/h</span></div>
+        <div class="pc">宣传 <b>130 km/h</b></div>
+        <div class="pk">最大速度 Vne</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kv" style="margin-top:20px"><span>全文约 35 分钟　12 章　5 图 13 表</span></div>
+</section>
+
+<!-- ================= ABSTRACT ================= -->
+<section id="abstract">
+  <div class="sec-head">
+    <div class="sec-num">00</div>
+    <div>
+      <h2>执行摘要</h2>
+      <p class="dek">先把结论写在前面：它是一架合法的个人航空器，不是一台可通勤的飞行汽车。</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="prose">
+      <p>陆地航母由陆行体与飞行体 X3-F 组成；按企业口径，它是全球首款进入量产试产阶段的分体式飞行汽车。陆行体是一辆三轴六轮、800V 增程、CLTC 续航超过 1,000 公里的四座汽车；飞行体是一架六轴十二桨、双人、纯电的多旋翼航空器，折叠后可完全收纳于后舱。<sup class="ref"><a href="#r5">[5]</a></sup></p>
+      <p class="en">The Land Aircraft Carrier combines a six-wheel range-extended ground unit with X3-F, a two-seat electric multirotor that folds into the rear bay. It is the first split-type flying car to reach pilot production.</p>
+
+      <p>最需要澄清的不是性能，而是定义。X3-F 以轻型运动航空器（LSA）类别申请型号合格证，专用条件限定：最大起飞重量不超过 960 公斤、1 名驾驶员加 1 名乘客、最大升限 120 米（AGL）、最大航程 20 公里、最大航时 20 分钟、不可超越速度 72 公里/小时、仅限昼间目视、不得商业载客。<sup class="ref"><a href="#r6">[6]</a></sup></p>
+      <p class="en">The critical issue is definition, not performance. X3-F is certificated in the light-sport aircraft category, with a special condition capping altitude at 120 m AGL, range at 20 km, endurance at 20 min, speed at 72 km/h, day-VFR only, and no commercial passenger operations.</p>
+
+      <p>这与企业宣传中的 130 公里/小时、30 分钟、1,000 米形成系统性落差。落差不是造假，而是两种语言：前者是<em>审定运行包线</em>，后者是<em>设计能力或营销口径</em>。把两者混为一谈，会同时高估它的用途、低估它的合规成本。</p>
+      <p class="en">This is a systematic gap against the marketed 130 km/h, 30 minutes and 1,000 m. The gap reflects two languages: a certified operating envelope versus design capability or marketing claims. Conflating them overstates the use case and understates compliance cost.</p>
+
+      <p>一阶原理模型显示：在 6 副 1.6 米涵道、880 公斤 MTOW 的假设下，20 分钟航时对应约 220 公斤、350 Wh/kg 的电池；若要达到 30 分钟，需要约 320 公斤、450 Wh/kg 的电池，MTOW 将逼近 840 公斤，仅剩 40 公斤余量。30 分钟在物理上接近可行，在工程上已没有多少裕度。</p>
+      <p class="en">A first-principles model suggests that 20 minutes corresponds to roughly 220 kg of 350 Wh/kg batteries. Reaching 30 minutes requires about 320 kg at 450 Wh/kg, pushing MTOW to 840 kg and leaving only 40 kg of margin.</p>
+
+      <p>因此，技术可行性应分三层：作为多旋翼飞行器<strong>可行</strong>；作为可收纳、可自动分合的系统<strong>有条件可行</strong>；作为城市通勤工具<strong>当前不可行</strong>。应用场景应按 20 公里、20 分钟、120 米、不可载客这四个硬约束筛选：营地体验、飞行培训与私人娱乐是主场景，通勤与商业载客不在其中。</p>
+      <p class="en">Technical feasibility should therefore be split into three layers: feasible as a multirotor; conditionally feasible as a folding, self-docking system; not feasible today as urban commuting.</p>
+
+      <p>市场可行性同样要分层：7,000 台预售是需求信号，不是收入；按行业不足 10% 的订单转化率，实际交付可能落在数百台量级；200 万元售价对应的是中国 200.5 万户千万资产家庭中的极小比例。<sup class="ref"><a href="#r15">[15]</a></sup>它更像一个高客单价、强运营、以营地为单位的窄众市场，而不是大众交通工具。</p>
+      <p class="en">Market feasibility must be layered too: 7,000 pre-orders are a demand signal, not revenue. At an industry conversion rate below 10%, deliveries may be in the hundreds. The product addresses a narrow, high-ticket, operations-heavy market, not mass mobility.</p>
+
+      <div class="pull">
+        <blockquote>它不是一辆会飞的车，而是一架能装进车里的飞机。前者卖给出行者，后者卖给体验者。</blockquote>
+        <div class="src">核心判断 / Central thesis</div>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="k">三层判定 / Verdict</div>
+      <div class="verdict" style="grid-template-columns:1fr;margin-top:0">
+        <div class="v"><div class="k">技术 / Technology</div><div class="s a">有条件可行</div><p>多旋翼与折叠结构成熟；分合机构可靠性、电池热管理仍缺公开数据。</p></div>
+        <div class="v"><div class="k">场景 / Scenario</div><div class="s g">体验优先</div><p>营地体验、培训、私人娱乐匹配；通勤与商业载客被航程和法规排除。</p></div>
+        <div class="v"><div class="k">市场 / Market</div><div class="s a">窄众可行</div><p>高客单价、强运营；订单转化与产能利用率是主变量。</p></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= 01 METHOD ================= -->
+<section id="s01">
+  <div class="sec-head">
+    <div class="sec-num">01</div>
+    <div>
+      <h2>研究设计与证据边界</h2>
+      <p class="dek">研究对象越有传播冲击力，越需要一张证据表。</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="prose">
+      <p>本文采用“证据分级 + 系统边界 + 一阶原理建模”的案例评估方法，而不是对厂商参数的复述。研究对象限定为小鹏汇天陆地航母及其飞行体 X3-F，时间范围为 2013 年汇天成立至 2026 年 11 月 17 日。资料分为五级：<strong>A</strong> 监管文件与适航专用条件；<strong>B</strong> 企业官网、公告与量产节点；<strong>C</strong> 权威媒体与现场报道；<strong>D</strong> 行业分析与券商研报；<strong>E</strong> 未署名聚合内容。所有关键数字至少由两个独立来源交叉，冲突处保留双方口径并标注。</p>
+      <p class="en">This study uses evidence grading, system-boundary analysis and first-principles modelling rather than restating manufacturer specifications. Sources are graded from A (regulatory documents) to E (unsigned aggregators); every key number is cross-checked against at least two independent sources.</p>
+
+      <p>最关键的证据边界是：<strong>企业宣传、适航专用条件、运行许可，是三套不同的文本。</strong>宣传给出设计能力，专用条件给出审定上限，运行许可给出“谁能飞、在哪飞、能不能收费”。任何关于“能不能通勤”“能不能赚钱”的判断，只能使用后两套文本。</p>
+
+      <div class="note ink">
+        <div class="lbl">证据边界 / Evidence boundary</div>
+        <p>设计能力（130 km/h、30 min、1,000 m）≠ 审定包线（72 km/h、20 min、120 m）≠ 运行许可（昼间目视、不得商业载客）。三组数字不能互相替代。</p>
+      </div>
+
+      <p>本文的定量部分只使用公开数据，并对未公开参数作出显式假设。凡属估算，均标注“本报告估算”，不与厂商数据混排。模型不替代飞行试验、风洞试验或适航符合性验证，只用于判断数量级与敏感方向。</p>
+    </div>
+
+    <aside class="side">
+      <div class="k">研究框架 / Framework</div>
+      <p><b>① 问题界定</b>　它到底是什么？谁能飞、在哪飞、能做什么？</p>
+      <p><b>② 证据分级</b>　A 监管 / B 企业 / C 媒体 / D 行业 / E 聚合。</p>
+      <p><b>③ 系统边界</b>　陆行体、飞行体、分合机构、营地、监管。</p>
+      <p><b>④ 一阶建模</b>　动量理论 + 质量预算 + 敏感性。</p>
+      <p><b>⑤ 场景筛选</b>　航程 / 载荷 / 法规 / 基建 / 支付意愿。</p>
+      <p><b>⑥ 市场与风险</b>　订单漏斗、单位经济、概率×影响。</p>
+    </aside>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>来源类型</th><th>主要检索词</th><th>采用材料</th><th>用途</th><th>等级</th></tr></thead>
+      <tbody>
+        <tr><td class="k">监管 / 适航</td><td>X3-F 专用条件、LSA、CCAR-21、TC / PC</td><td>民航局专用条件征求意见稿；媒体报道的受理与审查节点</td><td>确定审定包线、运行限制、取证路径</td><td><span class="chip g">A</span></td></tr>
+        <tr><td class="k">企业官方</td><td>陆地航母、X3-F、汇天、量产工厂</td><td>汇天官网、产品页、量产与交付公告</td><td>设计参数、构型、产能、营地计划</td><td><span class="chip t">B</span></td></tr>
+        <tr><td class="k">权威媒体</td><td>珠海航展、试产下线、阿联酋交付</td><td>新华社、国际在线、齐鲁晚报、地方党媒</td><td>现场事实、时间线、引述</td><td><span class="chip t">C</span></td></tr>
+        <tr><td class="k">行业分析</td><td>eVTOL、订单转化率、低空经济</td><td>赛迪顾问、券商与行业研究报告</td><td>市场口径、竞品对照</td><td><span class="chip a">D</span></td></tr>
+        <tr><td class="k">竞品官方</td><td>EH216-S、Joby S4、Archer Midnight、Alef Model A</td><td>厂商页面、监管公告、行业数据库</td><td>横向比较、定位图</td><td><span class="chip t">B/C</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">检索时间 2026-11-15 至 2026-11-17。中文来源为主，英文来源用于竞品与适航对照。未采用无法追溯作者的短视频与聚合页作为关键论据。</p>
+</section>
+
+<!-- ================= 02 DEFINITION ================= -->
+<section id="s02">
+  <div class="sec-head">
+    <div class="sec-num">02</div>
+    <div>
+      <h2>一辆车，两个监管对象</h2>
+      <p class="dek">分体式的真正创新，是把耦合的法规问题拆成两个可以独立取证的问题。</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>“飞行汽车”在中文语境里被用来指三类完全不同的东西：能上路的飞行器、能运飞机的汽车、以及不上路的空中出租车。三者的技术路线、法规身份与商业模式几乎没有交集。把它们放在一张表里比较，是行业最常见的范畴错误。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>路线</th><th>代表产品</th><th>使用方式</th><th>法规身份</th><th>核心约束</th></tr></thead>
+      <tbody>
+        <tr><td class="k">一体式可行驶飞行器</td><td>Alef Model A / Terrafugia Transition</td><td>从公路直接起飞，车机同一</td><td>机动车 + 航空器双重认证</td><td>质量、功率、道路法规与航空法规同时满足</td></tr>
+        <tr><td class="k">分体式飞行汽车</td><td><b>小鹏汇天 陆地航母</b></td><td>汽车把飞行器运到营地，再起飞</td><td>陆行体走机动车公告，飞行体走航空器适航</td><td>分合机构可靠性；两次认证；依赖营地</td></tr>
+        <tr><td class="k">纯 eVTOL 空中出租车</td><td>EH216-S / Joby S4 / Archer Midnight</td><td>垂直起降，点对点载客，不上公路</td><td>航空器；商业运行需 TC + PC + AC + OC</td><td>起降场、空域、电池、运营许可</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">“飞行汽车”不是一种技术，而是一组被同一叙事包裹的不同产品。本文只研究第二类。</p>
+
+  <div class="cols">
+    <div class="prose">
+      <p>陆地航母的巧妙之处，是把一个“既要满足公路法规、又要满足航空法规”的耦合问题，拆成两个可以独立取证的子问题。陆行体是一辆三轴六轮、C1 驾照可驾驶的增程式汽车，走机动车公告与牌照体系；飞行体是一架独立的 LSA 类航空器，走型号合格证与特殊适航证体系。两者通过一套自动分合机构连接，但在法律上始终是两个物体。</p>
+      <p>代价同样清晰：<strong>它不能在公路上起飞。</strong>用户必须先开车把飞行体运到营地，完成分离、展开、检查、空域放行，才能起飞。这决定了它的产品形态更接近“带轮子的机库 + 充电站”，而不是“会飞的汽车”。</p>
+      <p>这也解释了为什么小鹏汇天把大量资源投向营地网络：营地不是配套，而是产品的一部分。没有营地，飞行体只是一件无法合法起降的展品。</p>
+
+      <div class="note">
+        <div class="lbl">判断 / Verdict</div>
+        <p>分体式不是工程上的妥协，而是监管上的设计。它用“两次认证”换取了“两个体系各自的最优解”：汽车可以做得像汽车，飞机可以做得像飞机。</p>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="k">系统边界 / System boundary</div>
+      <p><b>陆行体</b>　机动车；C1 驾照；5,500 × 2,000 × 2,000 mm；3 轴 6 轮；6×6；后轮转向；800V 增程；CLTC &gt; 1,000 km。</p>
+      <p><b>飞行体 X3-F</b>　航空器；LSA 类别；6 轴 12 桨；双人；MTOW 880 kg（上限 960 kg）；折叠后 2,934 × 1,777 × 1,312 mm。</p>
+      <p><b>接口</b>　8 大控制模块、14 个作动机构、5 分钟一键分合；机械 + 电气 + 数据 + 能量四类连接。</p>
+      <p><b>外部系统</b>　飞行营地、空域管理、驾驶员执照、保险、维修。</p>
+    </aside>
+  </div>
+
+  <figure class="fig">
+    <div class="fig-bar"><span><b>图 01</b> / 系统边界与接口</span><span>SYSTEM BOUNDARY</span></div>
+    <div class="fig-frame pad">
+      <svg viewBox="0 0 900 470" role="img" aria-labelledby="sysTitle">
+        <title id="sysTitle">陆地航母系统边界图：陆行体、分合机构、飞行体、用户、营地与监管机构之间的物理与监管接口</title>
+        <defs>
+          <marker id="mkInk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#121614"/></marker>
+          <marker id="mkAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#38413D"/></marker>
+          <marker id="mkTeal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#0F4C55"/></marker>
+        </defs>
+        <g font-family="PingFang SC,Microsoft YaHei,sans-serif">
+          <!-- regulatory -->
+          <g>
+            <rect x="60" y="28" width="220" height="58" fill="#FCFCFA" stroke="#C4CAC2"/>
+            <text x="76" y="50" font-size="12" font-weight="600" fill="#121614">工信部 / 交管</text>
+            <text x="76" y="68" font-size="9.5" fill="#6B746F" font-family="Consolas,monospace">机动车公告 · 牌照 · C1</text>
+            <rect x="620" y="28" width="220" height="58" fill="#FCFCFA" stroke="#C4CAC2"/>
+            <text x="636" y="50" font-size="12" font-weight="600" fill="#121614">民航局 / 地区管理局</text>
+            <text x="636" y="68" font-size="9.5" fill="#6B746F" font-family="Consolas,monospace">TC · PC · 特殊适航证</text>
+          </g>
+          <!-- units -->
+          <g>
+            <rect x="60" y="164" width="220" height="106" fill="#FCFCFA" stroke="#121614" stroke-width="1.2"/>
+            <text x="76" y="188" font-size="13" font-weight="600">陆行体 / GROUND UNIT</text>
+            <text x="76" y="208" font-size="10" fill="#38413D">三轴六轮 · 6×6 · 后轮转向</text>
+            <text x="76" y="225" font-size="10" fill="#38413D">800V 碳化硅增程 · CLTC &gt; 1,000 km</text>
+            <text x="76" y="242" font-size="10" fill="#38413D">移动充电站：满油满电 5–6 次飞行</text>
+            <text x="76" y="259" font-size="9" fill="#38413D" font-family="Consolas,monospace">机动车 · C1 驾照</text>
+
+            <rect x="620" y="164" width="220" height="106" fill="#FCFCFA" stroke="#121614" stroke-width="1.2"/>
+            <text x="636" y="188" font-size="13" font-weight="600">飞行体 X3-F</text>
+            <text x="636" y="208" font-size="10" fill="#38413D">六轴十二桨 · 双涵道 · 纯电</text>
+            <text x="636" y="225" font-size="10" fill="#38413D">MTOW 880 kg · 双人 · 碳纤维</text>
+            <text x="636" y="242" font-size="10" fill="#38413D">20 km / 20 min / 120 m AGL</text>
+            <text x="636" y="259" font-size="9" fill="#38413D" font-family="Consolas,monospace">LSA · 昼间目视 · 不得载客</text>
+
+            <rect x="350" y="180" width="200" height="76" fill="#F2DCDD" stroke="#38413D"/>
+            <text x="450" y="204" font-size="12" font-weight="600" text-anchor="middle">自动分合机构</text>
+            <text x="450" y="222" font-size="9.5" text-anchor="middle" fill="#38413D">8 大控制模块 · 14 个作动机构</text>
+            <text x="450" y="238" font-size="9.5" text-anchor="middle" fill="#38413D">一键分离 / 组合 · 5 分钟</text>
+          </g>
+          <!-- bottom -->
+          <g>
+            <rect x="60" y="348" width="220" height="76" fill="#FCFCFA" stroke="#C4CAC2"/>
+            <text x="76" y="372" font-size="12" font-weight="600">用户 / 驾驶员</text>
+            <text x="76" y="390" font-size="9.5" fill="#38413D">运动驾驶员执照 · 训练 · 保险</text>
+            <text x="76" y="406" font-size="9.5" fill="#38413D">飞行前检查 · 空域申请</text>
+
+            <rect x="620" y="348" width="220" height="76" fill="#FCFCFA" stroke="#C4CAC2"/>
+            <text x="636" y="372" font-size="12" font-weight="600">飞行营地 / 起降场</text>
+            <text x="636" y="390" font-size="9.5" fill="#38413D">7 × 7 m 净空 · 补能 · 消防</text>
+            <text x="636" y="406" font-size="9.5" fill="#38413D">空域协调 · 维修 · 运营</text>
+          </g>
+          <!-- arrows -->
+          <g fill="none" stroke-linecap="round">
+            <path d="M170 348 L170 270" stroke="#121614" stroke-width="1.2" marker-end="url(#mkInk)"/>
+            <text x="178" y="318" font-size="9" fill="#6B746F">驾驶</text>
+            <path d="M280 217 L350 217" stroke="#121614" stroke-width="1.4" marker-end="url(#mkInk)"/>
+            <path d="M550 217 L620 217" stroke="#121614" stroke-width="1.4" marker-end="url(#mkInk)"/>
+            <text x="450" y="170" font-size="9" fill="#6B746F" text-anchor="middle">机械 + 电气 + 数据 + 能量</text>
+            <path d="M280 386 L620 386" stroke="#0F4C55" stroke-width="1" stroke-dasharray="3 4" marker-end="url(#mkTeal)"/>
+            <text x="450" y="378" font-size="9" fill="#0F4C55" text-anchor="middle">驾车抵达 · 营地起飞</text>
+            <path d="M730 348 L730 270" stroke="#121614" stroke-width="1.2" marker-start="url(#mkInk)" marker-end="url(#mkInk)"/>
+            <path d="M170 164 L170 86" stroke="#38413D" stroke-width="1" stroke-dasharray="4 3" marker-start="url(#mkAcc)" marker-end="url(#mkAcc)"/>
+            <path d="M730 164 L730 86" stroke="#38413D" stroke-width="1" stroke-dasharray="4 3" marker-start="url(#mkAcc)" marker-end="url(#mkAcc)"/>
+          </g>
+          <g font-family="Consolas,monospace" font-size="8.5" fill="#38413D">
+            <text x="180" y="120">监管接口</text>
+            <text x="740" y="120">监管接口</text>
+          </g>
+          <!-- legend -->
+          <g font-family="Consolas,monospace" font-size="8.5" fill="#6B746F">
+            <path d="M60 446 L92 446" stroke="#121614"/><text x="100" y="449">物理接口</text>
+            <path d="M180 446 L212 446" stroke="#38413D" stroke-dasharray="4 3"/><text x="220" y="449">监管接口</text>
+            <path d="M300 446 L332 446" stroke="#0F4C55" stroke-dasharray="3 4"/><text x="340" y="449">使用流程</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>图 01 说明：</b>陆行体与飞行体各自对应一套监管体系，自动分合机构是两者唯一的物理/能量/数据接口。营地既是起降场，也是空域与运营许可的实际落点。示意图不按比例。</figcaption>
+  </figure>
+</section>
+<!-- ================= 03 PATH ================= -->
+<section id="s03">
+  <div class="sec-head">
+    <div class="sec-num">03</div>
+    <div>
+      <h2>从飞行摩托到量产前夜</h2>
+      <p class="dek">十三年，五类里程碑。把它们混在一起，就会把“进展”误读成“交付”。</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="prose">
+      <p>汇天成立于 2013 年，早期产品是单人飞行摩托；2020 年旅航者 T1 完成载人试飞，2021 年获得小鹏汽车战略投资，2022 年 X2 在迪拜完成公开飞行。2023 年 10 月，陆地航母概念发布，产品路线从“飞行摩托”转向“分体式飞行汽车”。<sup class="ref"><a href="#r2">[2]</a></sup></p>
+      <p>2024 年 3 月，X3-F 的型号合格证申请获民航中南局受理，申请类别为轻型运动航空器（LSA）；同年 11 月，陆地航母在珠海航展完成全球首次公开飞行，演示了陆行体与飞行体的自动分离与结合。<sup class="ref"><a href="#r3">[3]</a></sup>2025 年 3 月，民航局适航司发布《X3-F 型航空器专用条件征求意见稿》，这是全国首个分体式飞行汽车飞行体的专用条件。<sup class="ref"><a href="#r6">[6]</a></sup></p>
+      <p>2025 年 10 月，X3-F 在迪拜完成海外首次有人驾驶公开飞行，同期签下 600 台订购协议；11 月，广州黄埔工厂首台飞行器试产下线。2026 年 3 月 5 日，5 台飞行器同日下线并完成多机试飞；5 月，生产许可证（PC）申请获受理；9 月，与阿联酋拉斯海玛酋长国签署战略合作，共建监管沙盒；10 月 20 日，首架试验用机交付阿联酋。<sup class="ref"><a href="#r7">[7]</a></sup></p>
+      <p>截至本文数据截止日，X3-F 的 TC 处于“局方试飞完成、待颁”状态，PC 仍在审查；企业口径为“力争 2026 年底取证交付”，但多家媒体援引公司信息称 <strong>2026 年内不向终端客户交付</strong>。<sup class="ref"><a href="#r6">[6]</a></sup></p>
+    </div>
+
+    <aside class="side">
+      <div class="k">五类里程碑 / Five kinds of milestone</div>
+      <p><b>融资</b>　B 轮 2.5 亿美元；近 2 亿美元股权融资；12.6 亿元银团贷款。代表资金能力，不代表产品能力。</p>
+      <p><b>订单</b>　预售 7,000+ 台；海外近 1,000 台。代表需求信号，不代表收入。</p>
+      <p><b>产能</b>　广州工厂年产能 1 万台；30 分钟/台。代表制造设计，不代表产量。</p>
+      <p><b>取证</b>　TC 待颁；PC 受理。代表合规进度，不代表商业运营。</p>
+      <p><b>交付</b>　2026 年内不向终端客户交付；阿联酋为试验机。代表真实收入起点。</p>
+    </aside>
+  </div>
+
+  <ol class="timeline">
+    <li><div class="t">2013</div><div class="h">汇天成立</div><div class="d">从单人飞行摩托起步，积累多旋翼载人飞行经验。</div></li>
+    <li><div class="t">2021 — 2022</div><div class="h">小鹏汽车战略投资；X2 海外公开飞行</div><div class="d">产品叙事从“飞行摩托”升级为“飞行汽车”，获得汽车工业的供应链与制造能力。</div></li>
+    <li class="key"><div class="t">2023.10</div><div class="h">陆地航母概念发布</div><div class="d">确定“陆行体 + 飞行体”分体式路线，飞行体代号 X3-F。</div></li>
+    <li class="key"><div class="t">2024.03</div><div class="h">X3-F 型号合格证申请获受理</div><div class="d">申请类别：轻型运动航空器（LSA）。这一步决定了后续“不得商业载客”的边界。</div><div><span class="chip g">A 级证据</span></div></li>
+    <li><div class="t">2024.11</div><div class="h">珠海航展全球首次公开飞行</div><div class="d">现场演示 5 分钟自动分离与结合；飞行演示由另一架飞行体完成。</div></li>
+    <li class="key"><div class="t">2025.03</div><div class="h">专用条件征求意见稿发布</div><div class="d">明确 120 m AGL、20 km、20 min、72 km/h、昼间目视、不得商业载客。</div><div><span class="chip g">A 级证据</span></div></li>
+    <li><div class="t">2025.10</div><div class="h">迪拜海外首次有人驾驶公开飞行</div><div class="d">同期签署 600 台订购协议；阿联酋颁发特许飞行证。</div></li>
+    <li><div class="t">2025.11 — 2026.05</div><div class="h">试产下线 → 批量试产 → PC 受理</div><div class="d">广州黄埔工厂 12 万平方米，规划年产能 1 万台；2026 年 3 月 5 台同日下线。</div></li>
+    <li><div class="t">2026.09 — 10</div><div class="h">阿联酋监管沙盒；首架试验机交付</div><div class="d">交付对象为试验用机，在阿联酋民航局监管下开展沙盒试运行，不产生商业收入。</div><div><span class="chip a">C 级证据</span></div></li>
+    <li class="key"><div class="t">2026.11</div><div class="h">TC 待颁；终端交付推迟</div><div class="d">局方试飞完成，TC 进入待颁状态；企业称力争年底取证，但 2026 年内不向终端客户交付。</div><div><span class="chip r">关键不确定性</span></div></li>
+  </ol>
+</section>
+
+<!-- ================= 04 ARCHITECTURE ================= -->
+<section id="s04">
+  <div class="sec-head">
+    <div class="sec-num">04</div>
+    <div>
+      <h2>把能量留在地面，把重量留在结构里</h2>
+      <p class="dek">分体式最大的技术优势不是飞行，而是把“续航焦虑”转移给了一台增程汽车。</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>陆地航母由四个子系统构成：陆行体、飞行体、自动分合机构、能源与补能系统。它们的技术成熟度并不相同：多旋翼飞行器已高度成熟，折叠结构与分合机构处于工程验证阶段，而航空级高倍率电池是真正的性能瓶颈。</p>
+  </div>
+
+  <figure class="fig">
+    <div class="fig-bar"><span><b>图 02</b> / 陆行体侧视示意</span><span>GROUND UNIT / SIDE ELEVATION</span></div>
+    <div class="fig-frame pad">
+      <svg viewBox="0 40 760 320" role="img" aria-labelledby="carTitle">
+        <title id="carTitle">陆行体侧视示意图：三轴六轮、后舱收纳飞行体、800V 增程平台</title>
+        <defs>
+          <marker id="carAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#38413D"/></marker>
+        </defs>
+        <g stroke="#121614" fill="none" stroke-width="1.2" stroke-linejoin="round">
+          <path d="M64 224 L64 192 L104 186 L134 158 L226 152 L250 118 L342 114 L386 152 L468 156 L468 112 L560 108 L676 116 L690 164 L690 224 Z" fill="#FCFCFA"/>
+          <path d="M256 128 L338 124 L370 152 L244 154 Z" fill="#D9E4E4" fill-opacity=".55"/>
+          <path d="M398 130 L458 128 L458 157 L398 159 Z" fill="#D9E4E4" fill-opacity=".55"/>
+          <path d="M392 152 L392 224 M468 156 L468 224" stroke-width=".8"/>
+          <path d="M468 112 L500 84 L672 84 L672 96 L510 96 L486 118 Z" fill="#EAECE6" stroke-width="1"/>
+          <path d="M510 96 L656 96" stroke="#38413D" stroke-width=".9" stroke-dasharray="3 3" opacity=".65"/>
+          <path d="M538 168 L558 148 L638 148 L658 168 L638 188 L558 188 Z" fill="#EAECE6" stroke-width="1"/>
+          <circle cx="562" cy="168" r="7" stroke-width=".8"/><circle cx="588" cy="168" r="7" stroke-width=".8"/>
+          <circle cx="614" cy="168" r="7" stroke-width=".8"/><circle cx="640" cy="168" r="7" stroke-width=".8"/>
+          <path d="M558 168 L538 168 M638 168 L658 168" stroke-width=".7"/>
+          <path d="M30 272 L730 272" stroke="#6B746F" stroke-width=".8" stroke-dasharray="5 5"/>
+          <g>
+            <rect x="116" y="220.5" width="68" height="5" fill="#EAECE6" stroke="none"/>
+            <rect x="346" y="220.5" width="68" height="5" fill="#EAECE6" stroke="none"/>
+            <rect x="576" y="220.5" width="68" height="5" fill="#EAECE6" stroke="none"/>
+            <circle cx="150" cy="242" r="30" fill="#EAECE6"/>
+            <circle cx="150" cy="242" r="13" stroke-width=".9"/>
+            <path d="M150 229 L150 255 M137 242 L163 242" stroke-width=".8"/>
+            <circle cx="380" cy="242" r="30" fill="#EAECE6"/>
+            <circle cx="380" cy="242" r="13" stroke-width=".9"/>
+            <path d="M380 229 L380 255 M367 242 L393 242" stroke-width=".8"/>
+            <circle cx="610" cy="242" r="30" fill="#EAECE6"/>
+            <circle cx="610" cy="242" r="13" stroke-width=".9"/>
+            <path d="M610 229 L610 255 M597 242 L623 242" stroke-width=".8"/>
+            <path d="M122 224 A 33 33 0 0 1 178 224" stroke-width="1.1"/>
+            <path d="M352 224 A 33 33 0 0 1 408 224" stroke-width="1.1"/>
+            <path d="M582 224 A 33 33 0 0 1 638 224" stroke-width="1.1"/>
+          </g>
+        </g>
+        <g font-family="Consolas,monospace" font-size="8" fill="#121614">
+          <circle cx="112" cy="204" r="7" fill="#EAECE6" stroke="#121614" stroke-width=".8"/><text x="112" y="207" text-anchor="middle">1</text>
+          <circle cx="330" cy="198" r="7" fill="#EAECE6" stroke="#121614" stroke-width=".8"/><text x="330" y="201" text-anchor="middle">2</text>
+          <circle cx="600" cy="126" r="7" fill="#EAECE6" stroke="#121614" stroke-width=".8"/><text x="600" y="129" text-anchor="middle">3</text>
+        </g>
+        <g stroke="#38413D" stroke-width=".8" fill="none">
+          <path d="M64 312 L690 312" marker-start="url(#carAr)" marker-end="url(#carAr)"/>
+          <path d="M714 84 L714 272" marker-start="url(#carAr)" marker-end="url(#carAr)"/>
+        </g>
+        <g font-family="Consolas,monospace" font-size="9.5" fill="#38413D">
+          <text x="377" y="305" text-anchor="middle">5 500 mm</text>
+          <text x="706" y="178" text-anchor="middle" transform="rotate(-90 706 178)">2 000 mm</text>
+        </g>
+        <g font-family="PingFang SC,Microsoft YaHei,sans-serif" font-size="9" fill="#38413D">
+          <text x="40" y="342">① 三轴六轮 · 6×6 · 后轮转向</text>
+          <text x="300" y="342">② 800V 碳化硅增程 · CLTC &gt; 1,000 km</text>
+          <text x="600" y="342">③ 后舱：收纳 + 补能</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>图 02 说明：</b>陆行体不是“会飞的汽车底盘”，而是一台带后舱的移动机库与充电站。5,500 × 2,000 × 2,000 mm 的尺寸可停入标准车位，C1 驾照即可驾驶。示意图不按比例。</figcaption>
+  </figure>
+
+  <div class="prose">
+    <h3>4.1 陆行体：把能量问题留在地面</h3>
+    <p>陆行体采用三轴六轮、6×6 全轮驱动与后轮转向，搭载 800V 碳化硅增程平台，CLTC 综合续航超过 1,000 公里。它可以在行驶或驻车时为飞行体补能，满油满电支持 5–6 次飞行，30%–80% 充电约 18 分钟。<sup class="ref"><a href="#r2">[2]</a></sup></p>
+    <p>这不是简单的“车背飞机”。从能量系统看，它把飞行器最昂贵的冗余——覆盖往返、备降与复飞的电量——转移给了地面增程器。飞行体只需携带单次 20 分钟任务所需的电量，电池质量因此可以控制在 200 公斤级，而不是纯电 eVTOL 常见的 300–400 公斤级。这是分体式相对于纯 eVTOL 的最大系统优势。</p>
+
+    <h3>4.2 飞行体：六轴十二桨与可折叠结构</h3>
+    <p>X3-F 采用六轴十二桨、六副涵道、同轴双桨布局，机身与桨叶使用碳纤维材料，双座 270° 座舱。展开尺寸 6,834 × 6,340 × 1,923 mm，折叠后 2,934 × 1,777 × 1,312 mm，可完全收纳于后舱。公开最大起飞重量 880 公斤，专用条件上限 960 公斤，有效载重 200 公斤。<sup class="ref"><a href="#r5">[5]</a></sup></p>
+    <p>折叠是一个被低估的工程难题。六个机臂的铰链、锁止、线束与冷却管路都要在每次展开后恢复刚度与密封；展开尺寸决定了它至少需要 7 × 7 米的净空起降区，这直接定义了营地的物理门槛。</p>
+
+    <h3>4.3 分合机构：最像“汽车”的航空部件</h3>
+    <p>自动分合机构包含 8 大控制模块与 14 个作动机构，可在 5 分钟内完成一键分离或组合。<sup class="ref"><a href="#r4">[4]</a></sup>它同时承担机械锁止、电气连接、数据握手与能量传输四类接口，是整台产品中唯一同时受汽车与航空两套可靠性标准约束的部件。</p>
+
+    <div class="note">
+      <div class="lbl">故障清单 / Failure list</div>
+      <p><b>地面分合：</b>未锁止起飞、锁止误释放、对接偏斜、线束磨损、冷却液接头渗漏。<b>空中：</b>单桨失效、电池热失控、飞控姿态失控、链路中断。<b>人员：</b>旋翼平面误入、后舱作业夹伤。</p>
+      <p>公开资料没有给出分合机构的 MTBF、故障树或冗余等级。这不是细节，而是适航审查的核心，也是本报告无法验证的部分。</p>
+    </div>
+
+    <h3>4.4 能源：310–400 Wh/kg 的边界</h3>
+    <p>X3-F 使用自研 XT-30 航空级电池，公开口径为 310–400 Wh/kg，兼顾汽车与民航双认证，瞬时放电功率为普通电车的 10 倍。<sup class="ref"><a href="#r5">[5]</a></sup>高倍率是垂直起降的刚需：多旋翼在悬停与爬升阶段的功率需求，往往是巡航的 2–3 倍。</p>
+    <p>但高倍率与高比能量是一对矛盾。电芯越追求能量密度，功率性能与热稳定性越难保证；航空要求的热失控隔离，又会进一步牺牲成组效率。这解释了为什么 30 分钟航时在物理上接近可行，在工程上却需要付出接近 MTOW 上限的代价。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>子系统</th><th>关键参数</th><th>工程难点</th><th>成熟度判断</th></tr></thead>
+      <tbody>
+        <tr><td class="k">陆行体</td><td class="num">5,500 × 2,000 × 2,000 mm；6×6；CLTC &gt; 1,000 km</td><td>后舱结构与整车刚度；增程器 NVH；后轮转向与越野</td><td><span class="chip g">成熟</span></td></tr>
+        <tr><td class="k">飞行体结构</td><td class="num">展开 6.8 × 6.3 m；折叠 2.9 × 1.8 m；碳纤维</td><td>折叠铰链刚度、疲劳、密封；桨叶一致性</td><td><span class="chip a">工程验证</span></td></tr>
+        <tr><td class="k">推进系统</td><td class="num">6 轴 12 桨；双涵道；同轴双桨</td><td>涵道效率、相邻桨干扰、单桨失效重构</td><td><span class="chip g">成熟构型</span></td></tr>
+        <tr><td class="k">能源</td><td class="num">310–400 Wh/kg；18 min 30–80%</td><td>高倍率热管理；热失控隔离；循环寿命</td><td><span class="chip a">有条件</span></td></tr>
+        <tr><td class="k">分合机构</td><td class="num">8 模块；14 作动器；5 min</td><td>锁止冗余；对接容差；线束/液冷接头寿命</td><td><span class="chip a">工程验证</span></td></tr>
+        <tr><td class="k">飞控与操纵</td><td class="num">单杆 6 自由度；一键起降/返航；避障</td><td>模式切换的人因；低空 GPS 拒止；风扰</td><td><span class="chip g">成熟</span></td></tr>
+        <tr><td class="k">适航</td><td class="num">LSA 专用条件；TC 待颁；PC 受理</td><td>专用条件符合性；分合机构审定；运行限制</td><td><span class="chip a">进行中</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cols">
+    <div class="prose">
+      <h3>4.5 质量预算：880 公斤里没有多少余量</h3>
+      <p>按公开的空重 360 公斤、MTOW 880 公斤推算，电池与乘员合计可用的质量为 520 公斤。若电池取 220 公斤、两人 160 公斤，则余量约 140 公斤；若把电池加到 320 公斤，余量只剩 40 公斤。这个余量决定了它能否通过“加电池换航时”的方式升级。</p>
+      <p>本报告的能量模型显示，要把航时从 20 分钟推到 30 分钟，需要把电池从约 220 公斤增加到约 320 公斤。此时 MTOW 达到 840 公斤，距离 880 公斤上限只剩 40 公斤。换句话说，<strong>30 分钟不是免费的营销数字，而是用掉了几乎全部质量余量的工程选择。</strong></p>
+    </div>
+    <aside class="side">
+      <div class="k">质量预算 / Mass budget（估算）</div>
+      <div class="bars">
+        <div class="bar-row"><div class="lab">结构 + 折叠机构<small>STRUCTURE</small></div><div class="bar-track"><div class="bar-fill" data-w="40.9"></div></div><div class="val">360 kg</div></div>
+        <div class="bar-row"><div class="lab">电池<small>BATTERY</small></div><div class="bar-track"><div class="bar-fill t" data-w="25"></div></div><div class="val">220 kg</div></div>
+        <div class="bar-row"><div class="lab">乘员 2 人<small>PAYLOAD</small></div><div class="bar-track"><div class="bar-fill" data-w="18.2"></div></div><div class="val">160 kg</div></div>
+        <div class="bar-row"><div class="lab">余量<small>MARGIN</small></div><div class="bar-track"><div class="bar-fill h" data-w="15.9"></div></div><div class="val">140 kg</div></div>
+      </div>
+      <p class="small">合计 880 kg。空重是否含电池、是否含冷却与消防系统，公开资料未说明；本图为量级示意，不是官方质量表。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= 05 ENVELOPE ================= -->
+<section id="s05">
+  <div class="sec-head">
+    <div class="sec-num">05</div>
+    <div>
+      <h2>两套飞行包线</h2>
+      <p class="dek">宣传口径与审定限制之间，差着 8.3 倍的高度和 3.3 倍的动能。</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>同一架飞机，有两套数字。把它们叠在一张图上，才能看清它到底能做什么。下表左列来自企业宣传与媒体转述，右列来自民航局专用条件与适航审查的公开信息。两者不是“谁真谁假”，而是“设计能力”与“允许运行”的区别。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>项目</th><th class="num">宣传 / 设计口径</th><th class="num">专用条件 / 审定包线</th><th>差异的含义</th></tr></thead>
+      <tbody>
+        <tr><td class="k">最大速度</td><td class="num">130 km/h</td><td class="num">72 km/h（不可超越速度）</td><td>审定值按撞击动能与结构包线收紧</td></tr>
+        <tr><td class="k">最大航时</td><td class="num">30 min</td><td class="num">20 min</td><td>含备份电量、爬升与风裕度</td></tr>
+        <tr><td class="k">最大航程</td><td class="num">30 km</td><td class="num">20 km</td><td>与 20 min × 60 km/h 自洽</td></tr>
+        <tr><td class="k">最大升限</td><td class="num">1,000 m</td><td class="num">120 m AGL / 2,500 m MSL</td><td>120 m 是运行升限，不是技术升限</td></tr>
+        <tr><td class="k">座位</td><td class="num">2 人</td><td class="num">1 名驾驶员 + 1 名乘客</td><td>不设第三座，无商业载客空间</td></tr>
+        <tr><td class="k">运行条件</td><td class="num">手动 / 自动；昼间</td><td class="num">仅昼间目视（VFR）</td><td>夜航、仪表、超视距均不在包线内</td></tr>
+        <tr><td class="k">用途</td><td class="num">通勤 / 体验 / 文旅</td><td class="num">私人娱乐、飞行培训；不得商业载客</td><td>“空中出租车”叙事不成立</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">宣传口径来自企业发布会与媒体转述<sup class="ref"><a href="#r9">[9]</a></sup>；审定包线来自《X3-F 型航空器专用条件征求意见稿》及适航审查公开信息。专用条件给出的 MTOW 上限为 960 kg，而部分报道的设计值为 880 kg——前者是审定上限，后者是设计值，二者并不矛盾。</p>
+
+  <figure class="fig">
+    <div class="fig-bar">
+      <span><b>图 03</b> / 审定包线与宣传口径</span>
+      <span class="fig-actions" id="envToggle">
+        <button data-mode="both" class="on">叠加</button>
+        <button data-mode="cert">仅审定</button>
+        <button data-mode="claim">仅宣传</button>
+      </span>
+    </div>
+    <div class="env-mobile">
+      <table>
+        <thead><tr><th>项目</th><th>审定包线</th><th>宣传口径</th></tr></thead>
+        <tbody>
+          <tr><td>最大速度</td><td class="t">72 km/h</td><td class="o">130 km/h</td></tr>
+          <tr><td>最大升限</td><td class="t">120 m</td><td class="o">1,000 m</td></tr>
+          <tr><td>最大航时</td><td class="t">20 min</td><td class="o">30 min</td></tr>
+          <tr><td>最大航程</td><td class="t">20 km</td><td class="o">30 km</td></tr>
+        </tbody>
+      </table>
+      <p>高度差 8.3× · 撞击动能差 3.3× · 移动端以表格替代二维包线图</p>
+    </div>
+    <div class="fig-frame"><svg id="envChart" viewBox="0 0 900 520" role="img" aria-label="飞行包线对比图：审定包线为 72 公里每小时、120 米，宣传口径为 130 公里每小时、1000 米"></svg></div>
+    <figcaption><b>图 03 说明：</b>绿色区域为专用条件允许的运行包线；橙色十字为宣传口径。两者在高度上相差 8.3 倍，在速度上相差 1.8 倍；以 880 kg 计算，撞击动能相差 3.3 倍。审定包线不是能力上限，而是允许运行的范围。</figcaption>
+  </figure>
+
+  <div class="cols">
+    <div class="prose">
+      <h3>5.1 为什么是 72 km/h，而不是 130 km/h</h3>
+      <p>72 km/h 不是随手写下的数字。以 880 公斤计算，72 km/h 对应约 176 kJ 动能，130 km/h 对应约 574 kJ，相差 3.3 倍。对一架没有机翼、不能滑翔、只能依靠多旋翼迫降的航空器，限制撞击能量比限制高度更有效。</p>
+      <p>另一个原因是类别边界。LSA 的运行场景被限定在昼间目视、低空、非人口密集区；120 米不是技术升限，而是运行升限。超过 120 米，空域管理、避让规则、驾驶员资质都会进入另一套体系，成本和审批复杂度随之上升。</p>
+      <p>这也解释了为什么“飞得更高更快”在商业上并不划算：<strong>性能每提高一档，合规成本提高的幅度往往更大。</strong></p>
+
+      <div class="note teal">
+        <div class="lbl">关键区分 / Distinction</div>
+        <p>20 分钟是运行限制，不是能力上限；30 分钟是设计能力，不是运行许可。两者之间的 10 分钟，被备份电量、爬升、风裕度与适航保守性共同占用。</p>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="k">数字对照 / At a glance</div>
+      <div class="big">8.3×</div>
+      <p>宣传升限 1,000 m 与审定升限 120 m 的比值。</p>
+      <div class="big">3.3×</div>
+      <p>130 km/h 与 72 km/h 对应的撞击动能比值（880 kg）。</p>
+      <div class="big">1.5×</div>
+      <p>30 min 与 20 min 的航时比值，对应约 100 kg 的电池增量。</p>
+    </aside>
+  </div>
+
+  <div class="prose">
+    <h3>5.2 把可行性算一遍：一阶能量模型</h3>
+    <p>为了判断“20 分钟”与“30 分钟”哪一个更接近物理现实，我建立了一个悬停等效模型。它不追求替代飞行试验，只用于判断数量级与敏感方向。</p>
+    <p>模型以动量理论为基础：<em>P = (mg)<sup>3/2</sup> / √(2ρA) / FM</em>。取 6 副直径 1.6 米的涵道（总盘面积 A ≈ 12.06 m²）、品质因数 FM = 0.68、任务因子 1.25（覆盖爬升、巡航、风与机动）、可用电量 90%、空重 360 kg、乘员 160 kg。电池质量与比能量为变量。</p>
+    <p>校准结果：当电池为 220 kg、比能量 350 Wh/kg 时，模型给出 19.9 分钟、19.9 公里，与审定值 20 分钟、20 公里吻合。这不是巧合，而是参数自洽的旁证。</p>
+    <p>敏感性结果更值得注意：在 220 kg 电池下，即使比能量达到 450 Wh/kg，航时也只有 25.6 分钟；要达到 30 分钟，需要 320 kg、450 Wh/kg，MTOW 升至 840 kg，距离 880 kg 上限只剩 40 kg。或者，保持 220 kg 电池，把比能量推到 528 Wh/kg——这已超出当前公开的 400 Wh/kg 上限。</p>
+  </div>
+
+  <div class="model">
+    <div class="model-top">
+      <div class="model-chart">
+        <p class="model-mhint">横轴 比能量 Wh/kg · 纵轴 航时 min · 实线 220 kg / 虚线 320 kg</p>
+        <svg id="energyChart" viewBox="0 0 900 470" role="img" aria-label="电池比能量与航时的关系曲线，两条曲线分别对应 220 公斤与 320 公斤电池"></svg>
+      </div>
+      <div class="model-panel">
+        <div>
+          <div class="k">可调参数 / Parameter</div>
+          <div class="ctrl" style="margin-top:8px">
+            <label for="eSlider"><span>电池比能量</span><b><span id="eVal">350</span> Wh/kg</b></label>
+            <input id="eSlider" type="range" min="250" max="480" step="5" value="350" aria-label="电池比能量，单位瓦时每千克">
+            <div class="scale"><span>250</span><span>310–400 公开区间</span><span>480</span></div>
+          </div>
+        </div>
+        <div class="readouts">
+          <div class="ro"><div class="l">220 kg 方案</div><div class="v"><span id="t220">19.9</span><small> min</small></div><div class="l">MTOW <span id="m220">740</span> kg</div></div>
+          <div class="ro"><div class="l">320 kg 方案</div><div class="v"><span id="t320">23.9</span><small> min</small></div><div class="l">MTOW <span id="m320">840</span> kg</div></div>
+          <div class="ro"><div class="l">悬停功率（220 kg）</div><div class="v"><span id="p220">209</span><small> kW</small></div></div>
+          <div class="ro"><div class="l">航程（220 kg）</div><div class="v"><span id="r220">19.9</span><small> km</small></div></div>
+        </div>
+        <div class="small" id="modelWarn" style="min-height:2.6em"></div>
+      </div>
+    </div>
+    <div class="model-foot"><span>模型：悬停动量理论 + 质量预算；A = 12.06 m²，FM = 0.68，任务因子 1.25，DoD = 0.9</span><span>本报告估算，非厂商数据</span></div>
+  </div>
+
+  <div class="note">
+    <div class="lbl">模型结论 / What the model says</div>
+    <p>20 分钟是保守的运行限制，30 分钟是接近极限的设计能力。要把 30 分钟变成可交付的指标，必须同时解决三件事：电池比能量达到 450 Wh/kg、MTOW 控制在 840 kg 以内、热管理与结构重量不超预算。这三件事目前都没有公开证据。</p>
+  </div>
+</section>
+<!-- ================= 06 AIRWORTHINESS ================= -->
+<section id="s06">
+  <div class="sec-head">
+    <div class="sec-num">06</div>
+    <div>
+      <h2>一张“能飞、但不能载客挣钱”的证</h2>
+      <p class="dek">LSA 不是降级，而是一条从 2024 年 3 月就选定的务实路线。</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="prose">
+      <p>适航审定不是一张证，而是一组证。型号合格证（TC）证明设计符合适航要求；生产许可证（PC）证明批量生产的一致性；适航证（AC）证明某一架具体的飞机可以飞行；运营合格证（OC）证明运营人可以从事商业载客。四张证对应四个不同的问题，缺一不可。</p>
+      <p>X3-F 走的是轻型运动航空器（LSA）路径。按 CCAR-21 的类别对应关系，以 LSA 类别取得 TC 的航空器，对应取得的是轻型运动类特殊适航证，法定不得从事商业性载客运行。<sup class="ref"><a href="#r6">[6]</a></sup>这不是取证冲刺阶段被“打回来”的限制，而是立项时就选定的边界：它瞄准的是“个人能买、自己飞”的证，不是“载客运营”的证。</p>
+      <p>对照亿航 EH216-S 会更清楚。EH216-S 按正常类申请，2023 年 10 月取得 TC，12 月取得标准适航证，2024 年 4 月取得 PC，2025 年 3 月运营人取得 OC，成为全球首个“四证齐全”的载人 eVTOL，可用于商业载客。<sup class="ref"><a href="#r11">[11]</a></sup>两家不是进度快慢的差别，而是从一开始就跑在两条不同的跑道上。</p>
+
+      <div class="note">
+        <div class="lbl">判断 / Verdict</div>
+        <p>“不能载客”不是产品的失败，而是产品定义的一部分。它换来了更快的取证速度、更低的安全目标与更早的市场培育；代价是放弃了空中出租车最核心的商业模式。</p>
+      </div>
+
+      <h3>6.1 执照：五分钟学会，不等于五分钟合法</h3>
+      <p>“单杆操纵、五分钟上手”是操纵层面的说法，不是法规层面的。驾驶 LSA 需要运动驾驶员执照，包含理论考试、飞行训练、体检与实践考试；每次飞行前还需要空域申请、气象判断、航空器检查与营地放行。产品把门槛从“会飞”降到了“会推杆”，但没有降到“不用执照”。</p>
+      <p>这一点对市场判断至关重要：<strong>买家买的不是一件即插即用的消费品，而是一套需要持续投入时间与训练的运行资格。</strong></p>
+
+      <h3>6.2 空域：120 米是一条行政线</h3>
+      <p>120 米 AGL 是运行升限，不是技术升限。它把飞行活动锁定在低空空域的最底层，避开了干线航空与大部分城市空中交通；同时也意味着视野、避障与地面第三方风险成为主要安全议题。每次飞行都需要在营地空域范围内报备或申请，跨营地转场则涉及新的空域协调。</p>
+      <p>这套流程决定了它的使用节奏：不是“想飞就飞”，而是“按计划飞”。这也是营地运营方存在的价值——他们替用户完成空域、场地、消防与保险的协调。</p>
+    </div>
+
+    <aside class="side">
+      <div class="k">四证对照 / Four certificates</div>
+      <p><b>TC</b>　型号合格证：设计批准。X3-F 待颁；EH216-S 2023-10。</p>
+      <p><b>PC</b>　生产许可证：批量一致性。X3-F 2026-05 受理；EH216-S 2024-04。</p>
+      <p><b>AC</b>　适航证：单机可飞。X3-F 未取得；EH216-S 2023-12。</p>
+      <p><b>OC</b>　运营合格证：商业载客。X3-F 不适用；EH216-S 2025-03。</p>
+      <div class="hr" style="margin:18px 0"></div>
+      <p class="small">“四证齐全”只适用于正常类载人运营。LSA 路径下，OC 不是时间问题，而是类别不允许。</p>
+    </aside>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>证书</th><th>回答的问题</th><th>X3-F（截至 2026-11）</th><th>EH216-S</th><th>对应用的约束</th></tr></thead>
+      <tbody>
+        <tr><td class="k">TC 型号合格证</td><td>设计是否安全</td><td><span class="chip a">待颁</span></td><td><span class="chip g">2023-10-13</span></td><td>无 TC 不得量产交付</td></tr>
+        <tr><td class="k">PC 生产许可证</td><td>批量生产是否一致</td><td><span class="chip a">2026-05 受理</span></td><td><span class="chip g">2024-04-07</span></td><td>无 PC 不得规模生产</td></tr>
+        <tr><td class="k">AC 适航证</td><td>这一架能否飞</td><td><span class="chip r">未取得</span></td><td><span class="chip g">2023-12-21</span></td><td>无 AC 不得交付飞行</td></tr>
+        <tr><td class="k">OC 运营合格证</td><td>能否商业载客</td><td><span class="chip m">不适用（LSA）</span></td><td><span class="chip g">2025-03</span></td><td>决定“卖体验”还是“卖运输”</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">日期来自公开报道与厂商公告。X3-F 的 TC 处于“局方试飞完成、待颁”状态；不同媒体对“2026 年底取证”的表述存在差异，本文以“截至数据截止日未颁”为准。</p>
+
+  <div class="prose">
+    <h3>6.3 安全目标：LSA 与正常类的差距</h3>
+    <p>LSA 的安全目标低于正常类与运输类，这是类别定义的组成部分，而不是制造质量问题。作为参照，5 座以上的载人 eVTOL 在正常类审定中，灾难性故障概率通常要求控制在 10<sup>-9</sup> 量级；LSA 只需达到“局方接受的标准”或“等效安全水平”。<sup class="ref"><a href="#r6">[6]</a></sup></p>
+    <p>这带来一个容易被忽略的推论：<strong>X3-F 的安全冗余设计，不需要按空中出租车的标准来做。</strong>这对成本与重量是好事，对“能不能载客”则是硬约束。用空中出租车的安全标准去要求它，会得出“不安全”的结论；用个人娱乐航空器的标准去看它，它是一台设计合理的 LSA。</p>
+  </div>
+</section>
+
+<!-- ================= 07 SCENARIOS ================= -->
+<section id="s07">
+  <div class="sec-head">
+    <div class="sec-num">07</div>
+    <div>
+      <h2>四个硬约束，筛掉一半场景</h2>
+      <p class="dek">20 公里、20 分钟、120 米、不可商业载客。能同时通过四项的场景并不多。</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>技术可行、运营可行、市场可行是三件事。一个场景即使飞机能飞，也可能因为空域、执照、保险或支付意愿而不成立。下表用六个维度给七个场景打分：航程匹配、载荷匹配、法规许可、基础设施、支付意愿、运营简洁度（分数越高越有利），并按权重合成总分。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table class="hm">
+      <thead><tr><th>场景</th><th>航程<br><small>20%</small></th><th>载荷<br><small>15%</small></th><th>法规<br><small>25%</small></th><th>基建<br><small>15%</small></th><th>支付<br><small>15%</small></th><th>运营<br><small>10%</small></th><th>加权<br>得分</th></tr></thead>
+      <tbody>
+        <tr><td>私人娱乐 / 收藏</td><td class="s4">4</td><td class="s5">5</td><td class="s5">5</td><td class="s5">5</td><td class="s5">5</td><td class="s3">3</td><td class="score">4.60</td></tr>
+        <tr><td>营地体验飞行</td><td class="s5">5</td><td class="s5">5</td><td class="s4">4</td><td class="s4">4</td><td class="s5">5</td><td class="s4">4</td><td class="score">4.50</td></tr>
+        <tr><td>飞行培训</td><td class="s5">5</td><td class="s4">4</td><td class="s5">5</td><td class="s5">5</td><td class="s3">3</td><td class="s4">4</td><td class="score">4.45</td></tr>
+        <tr><td>商业空中游览</td><td class="s4">4</td><td class="s4">4</td><td class="s1">1</td><td class="s4">4</td><td class="s5">5</td><td class="s3">3</td><td class="score">3.30</td></tr>
+        <tr><td>巡检 / 作业</td><td class="s2">2</td><td class="s3">3</td><td class="s3">3</td><td class="s3">3</td><td class="s2">2</td><td class="s3">3</td><td class="score">2.65</td></tr>
+        <tr><td>应急救援</td><td class="s2">2</td><td class="s2">2</td><td class="s2">2</td><td class="s3">3</td><td class="s2">2</td><td class="s2">2</td><td class="score">2.15</td></tr>
+        <tr><td>城市通勤</td><td class="s1">1</td><td class="s2">2</td><td class="s1">1</td><td class="s2">2</td><td class="s4">4</td><td class="s1">1</td><td class="score">1.75</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">评分为本报告主观判断（1–5），权重按“法规 > 航程 > 载荷/基建/支付 > 运营”设定。评分不是市场预测，而是用于比较场景的相对可行性。颜色越深表示越有利；移动端可横向滚动查看完整表格。</p>
+
+  <div class="grid-3">
+    <div class="cell">
+      <div class="k">01 / 最匹配</div>
+      <h4>营地体验飞行</h4>
+      <p>飞行 15 分钟、车程 30 分钟，营地完成起降、补能与放行。按“体验”收费而不是按“里程”收费，绕开了 20 公里航程的商业短板。这是产品与商业模式最自洽的场景。</p>
+    </div>
+    <div class="cell">
+      <div class="k">02 / 次匹配</div>
+      <h4>飞行培训</h4>
+      <p>LSA 执照训练需要稳定起降场与教练资源；20 分钟航时足够起落航线与基本操纵训练。瓶颈是小时成本与教练供给，不是飞机性能。</p>
+    </div>
+    <div class="cell">
+      <div class="k">03 / 核心买家</div>
+      <h4>私人娱乐与收藏</h4>
+      <p>200 万元的高端玩具，核心价值是“拥有”与“展示”，不是效率。买家对航程不敏感，对稀缺性、外观与营地社交敏感。这是预售订单的真实心理基础。</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="prose">
+      <h3>7.1 为什么城市通勤不成立</h3>
+      <p>不是某一个参数不够，而是四个约束同时否决：20 公里只够跨一个区；120 米低于多数高层建筑，避障与噪声问题突出；不可商业载客，意味着无法形成“空中出租车”网络；起降需要 7 × 7 米净空，城市里几乎找不到合规场地。</p>
+      <p>即使未来电池能量密度翻倍，空域与起降场仍然是瓶颈。<strong>通勤是一个城市治理问题，不只是一个航空技术问题。</strong></p>
+
+      <h3>7.2 为什么应急与作业也不是主场景</h3>
+      <p>应急救援需要更大的载荷、更长的航程与全天候能力；20 分钟、200 公斤、昼间目视的包线，只够做营地周边的快速侦察或物资投送。巡检作业则被工业无人机以更低的成本覆盖。它们可以是补充场景，但不足以支撑 7,000 台订单。</p>
+
+      <div class="note teal">
+        <div class="lbl">场景结论 / Scenario verdict</div>
+        <p>它的市场不是“出行”，而是“飞行体验”。前者按公里计价，后者按记忆计价。把产品卖给后者，200 万元是合理的；卖给前者，20 公里是致命的。</p>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="k">三层筛子 / Three sieves</div>
+      <p><b>技术可行</b>　能起飞、能悬停、能安全降落；多旋翼构型已证明。</p>
+      <p><b>运营可行</b>　有场地、有空域、有执照、有保险、有维修；依赖营地网络。</p>
+      <p><b>市场可行</b>　有人愿意为这个体验支付 200 万元，并持续使用；依赖高净值人群与社交场景。</p>
+      <div class="hr" style="margin:18px 0"></div>
+      <p class="small">三者是乘法关系，不是加法。任何一层为零，商业闭环就不成立。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= 08 MARKET ================= -->
+<section id="s08">
+  <div class="sec-head">
+    <div class="sec-num">08</div>
+    <div>
+      <h2>订单、产能、交付是三件事</h2>
+      <p class="dek">7,000 台预售是需求信号，不是 140 亿元收入。</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>行业最喜欢引用三个数字：7,000 台预售、1 万台年产能、200 万元售价。把它们相乘，会得到一个 140 亿元的账面市场。但这个乘法跳过了三个转换：预订转确认、确认转交付、交付转收入。每一个转换都会损失一个数量级。</p>
+  </div>
+
+  <div class="bars">
+    <div class="bar-row"><div class="lab">累计预售订单<small>PRE-ORDERS</small></div><div class="bar-track"><div class="bar-fill" data-w="70"></div></div><div class="val">7,000 台</div></div>
+    <div class="bar-row"><div class="lab">其中海外订单<small>OVERSEAS</small></div><div class="bar-track"><div class="bar-fill t" data-w="10"></div></div><div class="val">≈1,000 台</div></div>
+    <div class="bar-row"><div class="lab">按 10% 转化估算<small>CONVERTED</small></div><div class="bar-track"><div class="bar-fill a" data-w="7"></div></div><div class="val">≤700 台</div></div>
+    <div class="bar-row"><div class="lab">规划年产能<small>CAPACITY</small></div><div class="bar-track"><div class="bar-fill h" data-w="100"></div></div><div class="val">10,000 台</div></div>
+  </div>
+  <p class="table-note">条形长度以 10,000 台为满格。订单转化率取行业常用的“不足 10%”上限；实际转化取决于取证、交付与营地开放节奏。</p>
+
+  <div class="cols">
+    <div class="prose">
+      <p>按 200 万元单价计算，7,000 台对应约 140 亿元账面 GMV；按 10% 转化，实际交付约 700 台、收入约 14 亿元。与之对照，广州工厂规划年产能 1 万台、满产 30 分钟一台，以 700 台计，产能利用率只有 7%。<sup class="ref"><a href="#r8">[8]</a></sup></p>
+      <p>这不是说产能规划错了。1 万台是对 2030 年以后市场的下注，而不是对 2027 年需求的预测。问题在于，重资产工厂的折旧与维护会先于收入发生；如果交付爬坡慢于预期，现金流压力会集中在 2027–2028 年。</p>
+
+      <h3>8.1 客户基数：200.5 万户里的极小比例</h3>
+      <p>胡润《2025 财富报告》显示，中国拥有千万资产的高净值家庭为 200.5 万户，600 万资产的富裕家庭为 506 万户。<sup class="ref"><a href="#r15">[15]</a></sup>以千万资产家庭为基数，7,000 台订单相当于 0.35% 的渗透率——对一个 200 万元的新品类来说，这已经是相当激进的水平。</p>
+    </div>
+
+    <aside class="side">
+      <div class="k">渗透率情景 / Penetration</div>
+      <div class="tablewrap" style="border-top:1px solid var(--ink);margin-top:6px">
+        <table style="min-width:0;font-size:12px">
+          <thead><tr><th>渗透率</th><th class="num">台数</th><th class="num">GMV</th></tr></thead>
+          <tbody>
+            <tr><td>0.1%</td><td class="num">2,005</td><td class="num">40 亿</td></tr>
+            <tr><td>0.3%</td><td class="num">6,015</td><td class="num">120 亿</td></tr>
+            <tr><td>0.35%</td><td class="num">7,018</td><td class="num">140 亿</td></tr>
+            <tr><td>0.5%</td><td class="num">10,025</td><td class="num">201 亿</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">基数为 200.5 万户千万资产家庭；按 200 万元/台计算。情景测算，不是预测。</p>
+    </aside>
+  </div>
+
+  <div class="prose">
+    <h3>8.2 单位经济：利用率决定一切</h3>
+    <p>以 200 万元购置价、10 年折旧、3% 保险、每年 3 万元维护、6 万元营地/机库费用计算，年固定成本约 35 万元；每次 20 分钟飞行的能源与电池摊销约 168 元。年飞行次数越多，单次成本越低：</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>年飞行次数</th><th class="num">固定成本/次</th><th class="num">变动成本/次</th><th class="num">单次总成本</th><th>对照</th></tr></thead>
+      <tbody>
+        <tr><td class="k">100 次</td><td class="num">3,500 元</td><td class="num">168 元</td><td class="num">3,668 元</td><td>高于轻型直升机包机（约 3,000–5,000 元/20 min）</td></tr>
+        <tr><td class="k">300 次</td><td class="num">1,167 元</td><td class="num">168 元</td><td class="num">1,335 元</td><td>进入体验飞行的合理毛利区间</td></tr>
+        <tr><td class="k">500 次</td><td class="num">700 元</td><td class="num">168 元</td><td class="num">868 元</td><td>接近高端文旅项目的成本结构</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">本报告估算：购置 200 万元、残值 0、10 年直线折旧；保险 3%/年；维护 3 万元/年；营地/机库 6 万元/年；能源 60 kWh × 1.2 元；电池按 500 次循环摊销 4.8 万元。未计资金成本、执照培训与营地服务费。</p>
+
+  <div class="cols">
+    <div class="prose">
+      <p>结论很直接：<strong>当年飞行低于 150 次时，买一台陆地航母的单次成本高于包一架直升机。</strong>它的购买理由不是经济性，而是拥有感、社交价值与“随时能飞”的期权价值。这也意味着，目标客户不是“算账的人”，而是“不需要算账的人”。</p>
+
+      <h3>8.3 营地：渠道，也是重资产</h3>
+      <p>企业计划 2026 年内布局超过 200 家飞行营地，并已在全国布局超过 200 家体验网络。<sup class="ref"><a href="#r2">[2]</a></sup><sup class="ref"><a href="#r16">[16]</a></sup>按 7,000 台订单计算，每个营地对应约 35 台设备；按 700 台实际交付计算，每个营地只有 3.5 台。营地密度过高会稀释客流，过低则无法覆盖空域、消防、教练与维修的固定成本。</p>
+      <p>这解释了为什么“营地 + 6S 店 + 飞行学院”必须一起做：单卖飞机是一次性收入，营地运营才是持续收入。但营地是重资产、慢回报的生意，与汽车经销商的逻辑不同。</p>
+
+      <h3>8.4 阿联酋：是沙盒，不是收入</h3>
+      <p>2025 年 10 月迪拜公开飞行、600 台订购协议、2026 年 9 月监管沙盒、10 月首架试验机交付——这条出海线节奏很快，但性质需要区分：特许飞行证不是型号合格证，沙盒试运行不产生商业收入。它的价值是采集高温、沙尘环境下的运行数据，并为国内取证提供背书。<sup class="ref"><a href="#r7">[7]</a></sup></p>
+    </div>
+
+    <aside class="side">
+      <div class="k">市场判断 / Market verdict</div>
+      <p><b>可服务市场</b>　中国千万资产家庭中的体验型买家，5 年累计数千台量级。</p>
+      <p><b>核心变量</b>　订单转化率、单机年飞行小时、营地开放数量。</p>
+      <p><b>不是市场</b>　城市通勤、商业载客、大众文旅。</p>
+      <div class="hr" style="margin:18px 0"></div>
+      <p class="small">若 2027 年交付低于 500 台、营地开放低于 100 家，则“量产交付”叙事需要重新评估。</p>
+    </aside>
+  </div>
+</section>
+<!-- ================= 09 COMPETITORS ================= -->
+<section id="s09">
+  <div class="sec-head">
+    <div class="sec-num">09</div>
+    <div>
+      <h2>五款产品，四条赛道</h2>
+      <p class="dek">把不同赛道放进一张表，只会得出“谁更快”这种无关紧要的结论。</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>低空经济的万亿口径常常被误用。民航局预测 2025 年低空经济规模 1.5 万亿元、2035 年 3.5 万亿元，这个口径包含无人机、通用航空、基础设施与运营服务，不等于个人飞行汽车的市场规模。<sup class="ref"><a href="#r14">[14]</a></sup>同理，把陆地航母与 Joby、Archer 放在一张“航程排行榜”上，也无法回答它能不能卖出去。</p>
+    <p>更有意义的比较，是看每款产品“为谁解决什么问题、在什么法规下运行”。按这个标准，五款产品分属四条赛道：已取证的商业载人 eVTOL、待取证的长航程空中出租车、面向个人的可行驶飞行器、面向个人的分体式 LSA。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>产品</th><th>构型</th><th class="num">座位</th><th class="num">航程</th><th class="num">速度</th><th>认证状态</th><th>商业载客</th><th class="num">参考价格</th></tr></thead>
+      <tbody>
+        <tr><td class="k">小鹏汇天 X3-F</td><td>分体式 · 六轴十二桨</td><td class="num">1 + 1</td><td class="num">20 km</td><td class="num">72 km/h*</td><td><span class="chip a">TC 待颁</span></td><td>否（LSA）</td><td class="num">≤ 200 万元</td></tr>
+        <tr><td class="k">亿航 EH216-S</td><td>多旋翼 · 8 轴 16 桨</td><td class="num">2</td><td class="num">30 km</td><td class="num">130 km/h</td><td><span class="chip g">四证齐全</span></td><td>是（无人驾驶）</td><td class="num">未公开</td></tr>
+        <tr><td class="k">Joby S4</td><td>倾转旋翼</td><td class="num">1 + 4</td><td class="num">161 km</td><td class="num">321 km/h</td><td><span class="chip a">FAA 取证中</span></td><td>计划是</td><td class="num">未公开</td></tr>
+        <tr><td class="k">Archer Midnight</td><td>升力 + 巡航</td><td class="num">1 + 4</td><td class="num">96 km</td><td class="num">240 km/h</td><td><span class="chip a">FAA 取证中</span></td><td>计划是</td><td class="num">未公开</td></tr>
+        <tr><td class="k">Alef Model A</td><td>一体式可行驶</td><td class="num">1</td><td class="num">177 km</td><td class="num">177 km/h</td><td><span class="chip r">特殊适航·仅测试</span></td><td>否</td><td class="num">$299,999</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">* X3-F 的 72 km/h 为不可超越速度（Vne），不是巡航速度；EH216-S 的 130 km/h 为最大设计速度，巡航约 90 km/h；Alef 数据对应单座 Model A Ultralight。Joby 与 Archer 的航程取公开资料中较保守的任务半径口径，厂商最大值口径更高，但不影响本文的赛道划分。数据来源：厂商页面、监管公告与行业数据库。<sup class="ref"><a href="#r10">[10]</a></sup><sup class="ref"><a href="#r12">[12]</a></sup><sup class="ref"><a href="#r13">[13]</a></sup></p>
+
+  <figure class="fig">
+    <div class="fig-bar"><span><b>图 04</b> / 航程与商业化成熟度</span><span>POSITIONING MAP</span></div>
+    <div class="fig-frame"><svg id="mapChart" viewBox="0 0 900 500" role="img" aria-label="竞品定位图：横轴为航程，纵轴为商业化成熟度，气泡大小表示座位数"></svg></div>
+    <figcaption><b>图 04 说明：</b>横轴为公开航程，纵轴为商业化成熟度（1 = 仅测试，5 = 四证齐全并商业运营），气泡大小为座位数。X3-F 与 EH216-S 同处短航程区间，但一个面向个人、不可载客，另一个面向运营、可载客；Joby 与 Archer 在长航程区间，但尚未取证；Alef 航程最长、成熟度最低。</figcaption>
+  </figure>
+
+  <div class="cols">
+    <div class="prose">
+      <h3>9.1 真正的差异不在参数，在“谁承担运行责任”</h3>
+      <p>EH216-S 是无人驾驶，运行责任在运营人与地面调度系统；Joby 与 Archer 是有人驾驶，责任在商业飞行员与航空公司；X3-F 是个人自飞，责任在车主兼驾驶员；Alef 试图把责任交给个人，但连“合法上路”都还没有完成。</p>
+      <p>责任归属决定了保险、培训、维修与监管的全部结构。X3-F 把责任交给个人，因此它必须把操纵做得极简、把营地做得极重、把运行限制收得极紧。这不是产品缺陷，而是商业模式的必然。</p>
+
+      <h3>9.2 竞争威胁来自哪里</h3>
+      <p>短期威胁不是 Joby 或 Archer——它们在中国没有运行许可，航程与价格也完全不同。真正的威胁来自两类：一是 EH216-S 这类已取证、可载客的运营型产品，它会把“低空观光”的公共心智占住；二是更大载重、更低成本的多旋翼产品，它们会把营地体验的价格打下来。</p>
+      <p>X3-F 的护城河不是飞行器本身，而是“车—机—营地—培训—保险”的闭环。单卖一台飞行器，任何一家 eVTOL 公司都能做；把一台飞行器塞进汽车后备箱，并让车主在周末合法飞起来，才是难的部分。</p>
+    </div>
+
+    <aside class="side">
+      <div class="k">竞争格局 / Landscape</div>
+      <p><b>运营型</b>　EH216-S：已取证、可载客、按座位收费。对手是景区与城市空中游览。</p>
+      <p><b>出租车型</b>　Joby / Archer：长航程、五座、按里程收费。对手是直升机与专车。</p>
+      <p><b>个人型</b>　X3-F / Alef：高客单价、自飞、按拥有收费。对手是超跑、游艇与私人飞机。</p>
+      <div class="hr" style="margin:18px 0"></div>
+      <p class="small">X3-F 的真正竞品，可能不是另一架 eVTOL，而是一台 200 万元的超跑或一艘游艇。</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= 10 GO/NO-GO ================= -->
+<section id="s10">
+  <div class="sec-head">
+    <div class="sec-num">10</div>
+    <div>
+      <h2>什么情况下，这个故事成立</h2>
+      <p class="dek">不要问“它先不先进”，要问“哪几个数字必须发生”。</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>把判断变成可证伪的判据，是这门课最重要的训练。以下六项指标，任何一项长期不达标，都足以推翻“量产交付、商业闭环”的叙事。阈值是本报告设定的观察线，不是企业承诺。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>判据</th><th>观察阈值</th><th>当前状态（2026-11）</th><th>含义</th></tr></thead>
+      <tbody>
+        <tr><td class="k">TC 颁发</td><td class="num">≤ 2027-06</td><td><span class="chip a">待颁</span></td><td>无 TC 则无法量产交付，后续全部推迟</td></tr>
+        <tr><td class="k">年交付量</td><td class="num">≥ 500 台（2027）</td><td><span class="chip r">0</span></td><td>验证产线爬坡与供应链，而非产能规划</td></tr>
+        <tr><td class="k">常态化营地</td><td class="num">≥ 100 家</td><td><span class="chip a">200+ 布局，未全部运营</span></td><td>决定用户的实际使用半径与复飞率</td></tr>
+        <tr><td class="k">单机年飞行</td><td class="num">≥ 150 小时</td><td><span class="chip m">未公开</span></td><td>利用率决定单位成本与营地收入</td></tr>
+        <tr><td class="k">订单转化率</td><td class="num">≥ 30%</td><td><span class="chip m">未公开</span></td><td>区分“意向”与“真实需求”</td></tr>
+        <tr><td class="k">安全记录</td><td class="num">0 致命；&lt; 1/10,000 h</td><td><span class="chip m">未公开</span></td><td>一次致命事故足以冻结整个品类</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="prose">
+    <h3>10.1 三种情景</h3>
+    <p>以 2027–2030 为窗口，按取证、产能、营地与需求的组合，给出三种情景。它们不是预测，而是用于检查商业计划是否依赖过于乐观的假设。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>情景</th><th>关键假设</th><th class="num">2027</th><th class="num">2028</th><th class="num">2029</th><th class="num">2030</th><th class="num">累计交付</th><th class="num">累计收入</th></tr></thead>
+      <tbody>
+        <tr><td class="k">悲观</td><td>TC 推迟至 2027 下半年；营地开放慢；转化 &lt; 15%</td><td class="num">200</td><td class="num">400</td><td class="num">500</td><td class="num">400</td><td class="num">1,500</td><td class="num">30 亿</td></tr>
+        <tr><td class="k">基准</td><td>2027 上半年取证；营地 100 家；转化 30%</td><td class="num">500</td><td class="num">1,200</td><td class="num">2,000</td><td class="num">2,300</td><td class="num">6,000</td><td class="num">120 亿</td></tr>
+        <tr><td class="k">乐观</td><td>2026 年底取证；营地 200 家；海外同步放量</td><td class="num">1,000</td><td class="num">2,200</td><td class="num">3,000</td><td class="num">2,800</td><td class="num">9,000</td><td class="num">180 亿</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">按 200 万元/台计算累计收入，未计营地运营、培训、保险与售后收入。情景为本报告测算，不构成预测或投资建议。</p>
+
+  <div class="note">
+    <div class="lbl">最短观察窗口 / Watch 2027</div>
+    <p>2027 年有三个可验证的问题：TC 是否颁发、首批是否交付、营地是否常态化开放。这三个答案，比任何发布会、任何订单数字都更能说明问题。如果 2027 年底累计交付低于 500 台，那么“全球首款量产交付的飞行汽车”就仍然是一句宣传语，而不是事实。</p>
+  </div>
+</section>
+
+<!-- ================= 11 LIMITS ================= -->
+<section id="s11">
+  <div class="sec-head">
+    <div class="sec-num">11</div>
+    <div>
+      <h2>这份报告不知道什么</h2>
+      <p class="dek">明确说出“哪些结论还没有证据”，比多写十个形容词更有价值。</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="prose">
+      <p><strong>第一，公开数据存在冲突。</strong>最大起飞重量有 880 kg 与“专用条件上限 960 kg”两种口径；订单有 7,000 台与早期 3,000 台两种说法；航时有 20 分钟与 30 分钟两套数字。本报告保留双方口径，并在正文标注差异，但没有能力判断哪一个是最终设计值。</p>
+      <p><strong>第二，关键参数未公开。</strong>旋翼直径、盘面积、电池容量、空重是否含电池、分合机构 MTBF、噪声水平、单机成本、保险条款，均未找到可靠来源。能量模型中的 1.6 米涵道直径是假设值，不是官方数据；改变这一假设会显著改变航时结果。</p>
+      <p><strong>第三，没有做飞行试验或风洞试验。</strong>本报告的所有性能判断，都来自公开文本与一阶模型，不能替代适航符合性验证。模型只用于判断数量级与敏感方向，不用于证明某一指标可达。</p>
+      <p><strong>第四，政策变量未建模。</strong>空域改革、LSA 运行细则、地方补贴、保险监管，都可能在 2027 年前发生显著变化。任何一个变量的松动，都可能让“通勤”场景重新变得可行；反之亦然。</p>
+      <p><strong>第五，市场测算高度依赖假设。</strong>渗透率、转化率、年飞行次数、单次成本，均为情景假设。它们的作用是暴露敏感变量，而不是给出精确预测。</p>
+
+      <div class="note ink">
+        <div class="lbl">不能从本报告得出的结论</div>
+        <p>不能据此判断 X3-F 不安全；不能据此判断小鹏汇天会失败；不能据此判断飞行汽车没有未来。本报告能支持的结论只有一句：<strong>以当前审定包线，它是一台个人体验型航空器，不是城市通勤工具。</strong></p>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="k">待验证清单 / Open questions</div>
+      <p>□ TC 与 PC 的实际颁发时间</p>
+      <p>□ 空重 360 kg 是否包含电池与冷却系统</p>
+      <p>□ 实际旋翼直径与盘面积</p>
+      <p>□ 电池容量、循环寿命与热失控隔离方案</p>
+      <p>□ 分合机构的 MTBF 与冗余等级</p>
+      <p>□ 1 米/10 米/100 米处的噪声实测</p>
+      <p>□ 单机直接运营成本与保险条款</p>
+      <p>□ 营地空域审批的实际周期</p>
+      <p>□ 订单转化率与退订率</p>
+      <p>□ 首年实际飞行小时与事故记录</p>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= APPENDIX A ================= -->
+<section id="appendix">
+  <div class="sec-head">
+    <div class="sec-num">A</div>
+    <div>
+      <h2>十条媒体陈述的证据表</h2>
+      <p class="dek">把“听起来很厉害”翻译成“能支持什么、不能支持什么”。</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p>下表按课程建议的方法制作：每条陈述标注来源等级、可支持的结论、不可支持的结论，以及本报告的判定。它不是“打假”，而是把传播语言还原成证据语言。</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>#</th><th>公开陈述</th><th>来源 / 等级</th><th>可以支持</th><th>不能支持</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td class="num">01</td><td>“全球首款量产交付的飞行汽车”</td><td>企业宣传 / B</td><td>首款进入试产的分体式飞行汽车</td><td>已完成终端客户交付</td><td><span class="chip a">部分成立</span></td></tr>
+        <tr><td class="num">02</td><td>“5 分钟学会飞行”</td><td>企业宣传 / B</td><td>单杆操纵降低了操作门槛</td><td>无需执照即可合法驾驶</td><td><span class="chip r">误导</span></td></tr>
+        <tr><td class="num">03</td><td>“续航 30 分钟、时速 130 公里”</td><td>媒体转述 / C</td><td>设计能力或营销口径</td><td>审定运行限制</td><td><span class="chip a">口径混用</span></td></tr>
+        <tr><td class="num">04</td><td>“满油满电飞 6 次”</td><td>企业宣传 / B</td><td>母舰具备多次补能能力</td><td>连续 6 次满航时飞行</td><td><span class="chip a">有条件</span></td></tr>
+        <tr><td class="num">05</td><td>“预售订单 7,000 台”</td><td>企业口径 / B</td><td>存在明确的需求信号</td><td>已确认收入或必然交付</td><td><span class="chip a">需折算</span></td></tr>
+        <tr><td class="num">06</td><td>“年产能 1 万台”</td><td>工厂规划 / B</td><td>产线的设计能力</td><td>实际产量与交付量</td><td><span class="chip a">需折算</span></td></tr>
+        <tr><td class="num">07</td><td>“已获阿联酋特许飞行证”</td><td>监管信息 / C</td><td>可在监管下开展试验飞行</td><td>取得型号认证或商业运营许可</td><td><span class="chip g">成立但常被误读</span></td></tr>
+        <tr><td class="num">08</td><td>“TC 已获 / 即将颁发”</td><td>媒体转述 / C</td><td>局方试飞完成、进入待颁</td><td>截至 2026-11 已正式颁证</td><td><span class="chip r">未证实</span></td></tr>
+        <tr><td class="num">09</td><td>“售价 200 万元”</td><td>企业预售 / B</td><td>裸机价格上限</td><td>含营地、培训、保险、执照的全生命周期成本</td><td><span class="chip a">不完整</span></td></tr>
+        <tr><td class="num">10</td><td>“低空经济 3.5 万亿”</td><td>民航局预测 / A</td><td>低空经济总体规模</td><td>个人飞行汽车的市场 TAM</td><td><span class="chip r">口径错配</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">判定栏为本报告基于现有证据的判断；“误导”指陈述本身可能为真，但省略了关键限定条件，足以让读者得出错误结论。</p>
+
+  <div class="cols" style="margin-top:44px">
+    <div class="prose">
+      <h3>附录 B · 方法与 AI 使用记录</h3>
+      <p><strong>课程方法对应：</strong>证据表 → 附录 A；系统边界图 → 图 01；故障清单 → 4.3；场景评价矩阵 → 第 07 节；市场敏感性 → 8.1–8.2。五项方法均有可公开审查的产出，而不是只写在方法段里。</p>
+      <p><strong>研究流程：</strong>先以监管文件确定审定包线，再以企业资料补齐设计参数，随后用一阶模型做数量级校验，最后用场景矩阵与单位经济做可行性筛选。所有关键数字均保留来源链接；冲突数据保留双方口径。</p>
+      <p><strong>AI 工具的使用：</strong>本文在资料检索、参数结构化、模型脚本与网页实现四个环节使用了 AI 助手（WorkBuddy / DeepSeek-V4.1-Flash）。AI 负责起草与编码，作者负责来源核对、假设设定与结论判断。所有引用链接均在 2026-11-17 复核可访问。</p>
+      <p><strong>未使用 AI 生成的内容：</strong>没有使用 AI 生成图片、引文或受访者陈述；文中所有图表均为根据公开数据绘制的示意图或本报告模型输出。</p>
+      <p><strong>结构参考：</strong>章节组织参考课程案例页《The Flying Tesla Roadster》的“证据包”写法，但研究对象、数据与结论均为独立完成。<sup class="ref"><a href="#r1">[1]</a></sup></p>
+    </div>
+    <aside class="side">
+      <div class="k">可复现性 / Reproducibility</div>
+      <p><b>模型公式</b>　P = (mg)<sup>3/2</sup> / √(2ρA) / FM</p>
+      <p><b>固定参数</b>　ρ = 1.225 kg/m³；g = 9.81 m/s²；A = 12.06 m²；FM = 0.68；任务因子 1.25；DoD = 0.9；空重 360 kg；乘员 160 kg。</p>
+      <p><b>变量</b>　电池质量 220 / 320 kg；比能量 250–480 Wh/kg。</p>
+      <p><b>输出</b>　悬停功率、航时、航程、MTOW。</p>
+      <p class="small">改变 A 或 FM 会显著改变结果；读者可用同一公式复算。</p>
+    </aside>
+  </div>
+</section>
+
+<footer id="refs">
+  <div class="refs">
+    <h3>参考文献 / References（访问日期 2026-11-17）</h3>
+    <ol>
+      <li id="r1">课程案例页：The Flying Tesla Roadster — 技术、场景与市场可行性，飞行汽车技术基础。<a href="https://lab.autozyx.com/fundamentals-of-flying-vehicle-technology/tesla-flying-roadster/" target="_blank" rel="noopener">lab.autozyx.com</a></li>
+      <li id="r2">百度百科：小鹏飞行汽车 / 陆地航母。<a href="https://baike.baidu.com/item/%E9%99%86%E5%9C%B0%E8%88%AA%E6%AF%8D/63632796" target="_blank" rel="noopener">baike.baidu.com</a></li>
+      <li id="r3">国际在线：力争成为全球首个量产交付的飞行汽车，2025-03-13。<a href="https://auto.cri.cn/20250313/c379a9ff-fbb7-c860-4965-4e7dda5e29f4.html" target="_blank" rel="noopener">auto.cri.cn</a></li>
+      <li id="r4">圆象科技：200 万元的“陆地航母”年底交付，2026。<a href="https://yuanxiangsky.com/N/2156.html" target="_blank" rel="noopener">yuanxiangsky.com</a></li>
+      <li id="r5">飞行邦：小鹏汇天「陆地航母 X3-F」分体式飞行汽车参数。<a href="https://www.flyingstate.com/7180.html" target="_blank" rel="noopener">flyingstate.com</a></li>
+      <li id="r6">与非网：一张“不能载客”的 TC 证，和 7000 台交不出去的订单，2026。<a href="https://www.eefocus.com/article/2112357.html" target="_blank" rel="noopener">eefocus.com</a></li>
+      <li id="r7">科技区角：阿联酋酋长亲赴中国提飞行汽车，首架试验用机交付，2026-10。<a href="https://www.x-techcon.com/article/201333.html" target="_blank" rel="noopener">x-techcon.com</a></li>
+      <li id="r8">今日头条：7000 台订单摆着，飞行体的证还没发，2026-10。<a href="https://m.toutiao.com/article/7702602244184670760" target="_blank" rel="noopener">toutiao.com</a></li>
+      <li id="r9">齐鲁晚报：飞行汽车来啦！小鹏汇天“陆地航母”亮相青岛，2026。<a href="https://www.ql1d.com/general/26265867.html" target="_blank" rel="noopener">ql1d.com</a></li>
+      <li id="r10">百度百科：EH216S 警用载人无人机（EH216-S 参数与四证）。<a href="https://baike.baidu.com/item/EH216S%E8%AD%A6%E7%94%A8%E8%BD%BD%E4%BA%BA%E6%97%A0%E4%BA%BA%E6%9C%BA/67213190" target="_blank" rel="noopener">baike.baidu.com</a></li>
+      <li id="r11">Qatar eVTOL：EHang EH216-S 取证与运行时间线。<a href="https://qatarevtol.com/aircraft/ehang-eh216-s-qatar.html" target="_blank" rel="noopener">qatarevtol.com</a></li>
+      <li id="r12">eVTOL.Travel：Joby S4 vs Archer Midnight 对比，2026。<a href="https://evtol.travel/compare/joby-s4-vs-archer-midnight" target="_blank" rel="noopener">evtol.travel</a></li>
+      <li id="r13">Low Altitude Economy：Alef Model A 机型档案，2026-10-29。<a href="https://lowaltitudeeconomy.aero/ja/directory/electrified-aircraft/all-electric-aircraft/all-electric-evtol/alef-model-a" target="_blank" rel="noopener">lowaltitudeeconomy.aero</a></li>
+      <li id="r14">新华社：开年看中国｜翅膀上的中国：新赛道，“起飞”，2025-01-10。<a href="https://www.news.cn/sikepro/20250110/042db462919040ab9bd0cf1fa59e390c/c.html" target="_blank" rel="noopener">news.cn</a></li>
+      <li id="r15">胡润研究院：2025 东亚银行·胡润财富报告，2026-06-30。<a href="https://hurun.net/zh-cn/info/detail?num=CVWLBLAWHVHX" target="_blank" rel="noopener">hurun.net</a></li>
+      <li id="r16">小鹏汇天官网：陆地航母、A868 与品牌动态。<a href="https://cn.aridge.com" target="_blank" rel="noopener">cn.aridge.com</a></li>
+    </ol>
+  </div>
+  <div class="colophon">
+    <span>FVT-2026-11　课程作业　非商业用途</span>
+    <span>作者 李英喆　学号 15231015</span>
+    <span>数据截止 2026-11-17</span>
+  </div>
+</footer>
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- shared ---------- */
+  var NS = 'http://www.w3.org/2000/svg';
+  var C = {ink:'#121614', ink2:'#38413D', muted:'#6B746F', rule:'#C4CAC2', rule2:'#D8DCD4',
+           accent:'#8A6100', accentSoft:'#EEE2C4', teal:'#0F4C55', tealSoft:'#D9E4E4',
+           amber:'#8A6100', amberSoft:'#EEE2C4', red:'#C41E28', redSoft:'#F2DCDD',
+           green:'#1B6047', greenSoft:'#D6E3DB', paper:'#FCFCFA'};
+
+  function mk(tag, attrs, parent){
+    var e = document.createElementNS(NS, tag);
+    if(attrs){ for(var k in attrs){ if(attrs[k] !== null && attrs[k] !== undefined) e.setAttribute(k, attrs[k]); } }
+    if(parent) parent.appendChild(e);
+    return e;
+  }
+  function T(parent, x, y, s, o){
+    var a = {'font-family':'Consolas, "Liberation Mono", monospace','font-size':9, fill:C.muted};
+    if(o){ for(var k in o) a[k]=o[k]; }
+    a.x = x; a.y = y;
+    var t = mk('text', a, parent);
+    t.textContent = s;
+    return t;
+  }
+  function line(parent, x1,y1,x2,y2, stroke, w, dash){
+    return mk('line',{x1:x1,y1:y1,x2:x2,y2:y2,stroke:stroke||C.rule,'stroke-width':w||1,'stroke-dasharray':dash||null},parent);
+  }
+  function rect(parent,x,y,w,h,fill,stroke,sw){
+    return mk('rect',{x:x,y:y,width:w,height:h,fill:fill||'none',stroke:stroke||'none','stroke-width':sw||1},parent);
+  }
+
+  /* ---------- navigation ---------- */
+  var NAV = [
+    {id:'cover', n:'00', t:'封面'},
+    {id:'abstract', n:'—', t:'摘要'},
+    {id:'s01', n:'01', t:'方法'},
+    {id:'s02', n:'02', t:'定义'},
+    {id:'s03', n:'03', t:'路径'},
+    {id:'s04', n:'04', t:'架构'},
+    {id:'s05', n:'05', t:'包线'},
+    {id:'s06', n:'06', t:'适航'},
+    {id:'s07', n:'07', t:'场景'},
+    {id:'s08', n:'08', t:'市场'},
+    {id:'s09', n:'09', t:'竞品'},
+    {id:'s10', n:'10', t:'判据'},
+    {id:'s11', n:'11', t:'局限'},
+    {id:'appendix', n:'A', t:'附录'},
+    {id:'refs', n:'R', t:'参考'}
+  ];
+  var rail = document.getElementById('rail');
+  var overlayList = document.getElementById('overlayList');
+  var links = [];
+  NAV.forEach(function(item){
+    var a = document.createElement('a');
+    a.href = '#' + item.id;
+    a.innerHTML = '<span class="n">' + item.n + '</span><span class="bar"></span><span class="t">' + item.t + '</span>';
+    rail.appendChild(a); links.push(a);
+    var li = document.createElement('li');
+    var al = document.createElement('a');
+    al.href = '#' + item.id;
+    al.innerHTML = '<span>' + item.n + '</span>' + item.t;
+    li.appendChild(al); overlayList.appendChild(li);
+  });
+
+  var secs = NAV.map(function(i){ return document.getElementById(i.id); }).filter(Boolean);
+  var progress = document.getElementById('progress');
+  var curClause = document.getElementById('curClause');
+  var ticking = false;
+
+  function updateScroll(){
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.width = (h > 0 ? Math.min(100, window.scrollY / h * 100) : 0) + '%';
+    var y = window.scrollY + window.innerHeight * 0.33;
+    var idx = 0;
+    for(var i=0;i<secs.length;i++){ if(secs[i] && secs[i].offsetTop <= y) idx = i; }
+    links.forEach(function(a,i){ a.classList.toggle('on', i === idx); });
+    if(curClause && NAV[idx]) curClause.textContent = NAV[idx].t;
+    ticking = false;
+  }
+  window.addEventListener('scroll', function(){
+    if(!ticking){ ticking = true; requestAnimationFrame(updateScroll); }
+  }, {passive:true});
+  updateScroll();
+
+  /* overlay */
+  var overlay = document.getElementById('overlay');
+  var menuBtn = document.getElementById('menuBtn');
+  var closeBtn = document.getElementById('closeBtn');
+  function setMenu(open){
+    overlay.classList.toggle('open', open);
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+  menuBtn.addEventListener('click', function(){ setMenu(!overlay.classList.contains('open')); });
+  closeBtn.addEventListener('click', function(){ setMenu(false); });
+  overlay.addEventListener('click', function(e){ if(e.target.tagName === 'A') setMenu(false); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') setMenu(false); });
+
+  /* ---------- 封面在视野内时隐去侧栏 ---------- */
+  var coverSec = document.getElementById('cover');
+  if('IntersectionObserver' in window && coverSec){
+    var co = new IntersectionObserver(function(es){
+      es.forEach(function(e){ document.body.classList.toggle('at-cover', e.isIntersecting); });
+    }, {threshold:0});
+    co.observe(coverSec);
+  }
+
+  /* ---------- reveal ---------- */
+  var revealEls = document.querySelectorAll('.sec-head, .fig, .tablewrap, .note, .grid-3, .verdict, .model, .bars, .timeline, .pull, .refs');
+  if('IntersectionObserver' in window){
+    var ro = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); ro.unobserve(en.target); } });
+    }, {threshold:0.06, rootMargin:'0px 0px -40px 0px'});
+    revealEls.forEach(function(el){ el.classList.add('rv'); ro.observe(el); });
+  }
+
+  /* ---------- bar fills ---------- */
+  var bars = document.querySelectorAll('.bar-fill');
+  if('IntersectionObserver' in window){
+    var bo = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          var el = en.target;
+          el.style.width = (el.getAttribute('data-w') || 0) + '%';
+          bo.unobserve(el);
+        }
+      });
+    }, {threshold:0.2});
+    bars.forEach(function(b){ bo.observe(b); });
+  } else {
+    bars.forEach(function(b){ b.style.width = (b.getAttribute('data-w') || 0) + '%'; });
+  }
+
+  /* ---------- figure 03: envelope ---------- */
+  function drawEnvelope(){
+    var svg = document.getElementById('envChart');
+    if(!svg) return;
+    svg.innerHTML = '';
+    var W=900, H=540, L=78, R=64, TP=42, B=78;
+    var xmax=140, ymax=1200;
+    var X = function(v){ return L + v / xmax * (W - L - R); };
+    var Y = function(v){ return H - B - v / ymax * (H - TP - B); };
+    var gGrid = mk('g',{},svg), gCert = mk('g',{},svg), gClaim = mk('g',{},svg), gDiff = mk('g',{},svg), gAxis = mk('g',{},svg);
+
+    for(var v=0; v<=ymax; v+=200){
+      line(gGrid, L, Y(v), W-R, Y(v), C.rule2, 1);
+      T(gGrid, L-10, Y(v)+4, String(v), {'text-anchor':'end'});
+    }
+    for(var s=0; s<=xmax; s+=20){
+      line(gGrid, X(s), TP, X(s), H-B, C.rule2, 1);
+      T(gGrid, X(s), H-B+18, String(s), {'text-anchor':'middle'});
+    }
+    line(gGrid, L, TP, L, H-B, C.ink, 1);
+    line(gGrid, L, H-B, W-R, H-B, C.ink, 1);
+
+    /* certified envelope */
+    rect(gCert, X(0), Y(120), X(72)-X(0), Y(0)-Y(120), C.green, C.green, 1).setAttribute('fill-opacity','0.88');
+    T(gCert, X(4), Y(120)+17, '审定运行包线', {fill:'#FFFFFF','font-size':10,'font-weight':'bold','font-family':'PingFang SC, Microsoft YaHei, sans-serif'});
+    T(gCert, X(4), Y(120)+31, '≤ 72 km/h · ≤ 120 m AGL', {fill:'#D9E4E4','font-size':9.5});
+
+    /* claim */
+    var cx=X(130), cy=Y(1000);
+    line(gClaim, cx, cy, cx, H-B, C.accent, 1, '3 4').setAttribute('opacity','0.45');
+    line(gClaim, cx, cy, L, cy, C.accent, 1, '3 4').setAttribute('opacity','0.45');
+    mk('circle',{cx:cx,cy:cy,r:6,fill:C.accent,stroke:C.paper,'stroke-width':2},gClaim);
+    line(gClaim, cx-11, cy, cx+11, cy, C.accent, 1.2);
+    line(gClaim, cx, cy-11, cx, cy+11, C.accent, 1.2);
+    T(gClaim, cx-14, cy-12, '宣传 / 设计口径', {'text-anchor':'end',fill:C.accent,'font-size':10,'font-weight':'bold','font-family':'PingFang SC, Microsoft YaHei, sans-serif'});
+    T(gClaim, cx-14, cy+6, '130 km/h · 1,000 m · 30 min', {'text-anchor':'end',fill:C.accent,'font-size':9.5});
+
+    /* 8.3x bracket */
+    var bx=W-R-18;
+    line(gDiff, cx, cy, bx, cy, C.accent, 1, '2 3').setAttribute('opacity','0.35');
+    line(gDiff, X(72), Y(120), bx, Y(120), C.accent, 1, '2 3').setAttribute('opacity','0.35');
+    line(gDiff, bx, Y(120), bx, cy, C.accent, 1);
+    mk('path',{d:'M'+bx+' '+Y(120)+' l-3 6 h6 z',fill:C.accent},gDiff);
+    mk('path',{d:'M'+bx+' '+cy+' l-3 -6 h6 z',fill:C.accent},gDiff);
+    T(gDiff, bx-12, (Y(120)+cy)/2 + 3, '高度差 8.3×', {'text-anchor':'end',fill:C.accent,'font-size':9.5,'font-family':'PingFang SC, Microsoft YaHei, sans-serif'});
+
+    /* axis titles + legend */
+    T(gAxis, W-R, H-46, '速度 km/h →', {'text-anchor':'end',fill:C.ink2,'font-size':9.5});
+    T(gAxis, L, TP-14, '高度 m (AGL)', {fill:C.ink2,'font-size':9.5});
+    rect(gAxis, L+14, TP+10, 9, 9, C.green, C.green, 0);
+    T(gAxis, L+29, TP+18, '审定运行包线', {fill:C.ink2,'font-size':9});
+    mk('circle',{cx:L+18,cy:TP+36,r:4.5,fill:C.accent},gAxis);
+    T(gAxis, L+29, TP+39, '宣传口径', {fill:C.ink2,'font-size':9});
+
+    var btns = document.querySelectorAll('#envToggle button');
+    function mode(m){
+      gCert.style.transition = 'opacity .3s'; gClaim.style.transition = 'opacity .3s'; gDiff.style.transition = 'opacity .3s';
+      gCert.style.opacity = (m === 'claim') ? '0.08' : '1';
+      gClaim.style.opacity = (m === 'cert') ? '0.08' : '1';
+      gDiff.style.opacity = (m === 'both') ? '1' : '0.08';
+      btns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-mode') === m); });
+    }
+    btns.forEach(function(b){ b.addEventListener('click', function(){ mode(b.getAttribute('data-mode')); }); });
+  }
+
+  /* ---------- figure 05: energy model ---------- */
+  var MODEL = {A:12.06, FM:0.68, MF:1.25, DOD:0.9, RHO:1.225, G:9.81, EMPTY:360, PAX:160};
+  function perf(mb, e){
+    var m = MODEL.EMPTY + mb + MODEL.PAX;
+    var P = Math.pow(m * MODEL.G, 1.5) / Math.sqrt(2 * MODEL.RHO * MODEL.A) / MODEL.FM / 1000 * MODEL.MF;
+    var E = mb * e / 1000 * MODEL.DOD;
+    return {m:m, P:P, t:E / P * 60};
+  }
+
+  function drawEnergy(e){
+    var svg = document.getElementById('energyChart');
+    if(!svg) return;
+    svg.innerHTML = '';
+    var W=900, H=470, L=72, R=54, TP=36, B=62;
+    var xmin=250, xmax=480, ymax=40;
+    var X = function(v){ return L + (v-xmin)/(xmax-xmin) * (W-L-R); };
+    var Y = function(v){ return H-B - v/ymax * (H-TP-B); };
+    var g = mk('g',{},svg);
+
+    /* band */
+    rect(g, X(310), TP, X(400)-X(310), H-B-TP, C.accentSoft, 'none', 0).setAttribute('opacity','0.55');
+    T(g, (X(310)+X(400))/2, TP+14, '公开宣称 310–400 Wh/kg', {'text-anchor':'middle',fill:C.accent,'font-size':9});
+
+    for(var yv=0; yv<=40; yv+=10){
+      line(g, L, Y(yv), W-R, Y(yv), C.rule2, 1);
+      T(g, L-10, Y(yv)+4, String(yv), {'text-anchor':'end'});
+    }
+    for(var xv=250; xv<=450; xv+=50){
+      line(g, X(xv), TP, X(xv), H-B, C.rule2, 1);
+      T(g, X(xv), H-B+18, String(xv), {'text-anchor':'middle'});
+    }
+    line(g, L, TP, L, H-B, C.ink, 1);
+    line(g, L, H-B, W-R, H-B, C.ink, 1);
+
+    /* thresholds */
+    line(g, L, Y(20), W-R, Y(20), C.green, 1, '4 4');
+    T(g, L+8, Y(20)-6, '审定 20 min', {fill:C.green,'font-size':9});
+    line(g, L, Y(30), W-R, Y(30), C.accent, 1, '4 4');
+    T(g, L+8, Y(30)-6, '宣传 30 min', {fill:C.accent,'font-size':9});
+
+    /* curves */
+    function curve(mb, color, dash, width){
+      var pts=[];
+      for(var e2=xmin; e2<=xmax; e2+=2){ var p=perf(mb,e2); pts.push([X(e2), Y(p.t)]); }
+      var d = pts.map(function(p,i){ return (i?'L':'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+      mk('path',{d:d,fill:'none',stroke:color,'stroke-width':width||1.8,'stroke-dasharray':dash||null,'stroke-linecap':'round'},g);
+    }
+    curve(220, C.ink, null, 2);
+    curve(320, C.teal, '5 4', 1.6);
+
+    var p220=perf(220,e), p320=perf(320,e);
+    /* vertical cursor */
+    line(g, X(e), TP, X(e), H-B, C.accent, 1, '2 4').setAttribute('opacity','0.35');
+    mk('circle',{cx:X(e),cy:Y(p220.t),r:5.5,fill:C.paper,stroke:C.ink,'stroke-width':2},g);
+    mk('circle',{cx:X(e),cy:Y(p320.t),r:5.5,fill:C.paper,stroke:C.teal,'stroke-width':2},g);
+    T(g, X(e)+9, Y(p220.t)-8, p220.t.toFixed(1)+' min', {fill:C.ink,'font-size':9,'font-weight':'bold'});
+    T(g, X(e)+9, Y(p320.t)+15, p320.t.toFixed(1)+' min', {fill:C.teal,'font-size':9,'font-weight':'bold'});
+
+    /* legend */
+    line(g, L+12, TP+12, L+30, TP+12, C.ink, 2);
+    T(g, L+36, TP+15, '220 kg 电池', {fill:C.ink,'font-size':8.5});
+    line(g, L+100, TP+12, L+118, TP+12, C.teal, 1.6, '4 3');
+    T(g, L+124, TP+15, '320 kg 电池', {fill:C.teal,'font-size':8.5});
+
+    /* end labels */
+    T(g, X(480)-4, Y(perf(220,480).t)+17, '220 kg', {'text-anchor':'end',fill:C.ink,'font-size':9});
+    T(g, X(480)-4, Y(perf(320,480).t)-11, '320 kg', {'text-anchor':'end',fill:C.teal,'font-size':9});
+
+    /* axes */
+    T(g, W-R, H-24, '电池比能量 Wh/kg →', {'text-anchor':'end',fill:C.ink2,'font-size':9.5});
+    T(g, L, TP-12, '悬停航时 min', {fill:C.ink2,'font-size':9.5});
+  }
+
+  var eSlider = document.getElementById('eSlider');
+  function updateModel(){
+    if(!eSlider) return;
+    var e = Number(eSlider.value);
+    drawEnergy(e);
+    var a=perf(220,e), b=perf(320,e);
+    document.getElementById('eVal').textContent = e;
+    document.getElementById('t220').textContent = a.t.toFixed(1);
+    document.getElementById('t320').textContent = b.t.toFixed(1);
+    document.getElementById('m220').textContent = Math.round(a.m);
+    document.getElementById('m320').textContent = Math.round(b.m);
+    document.getElementById('p220').textContent = Math.round(a.P);
+    document.getElementById('r220').textContent = a.t.toFixed(1);
+    var warn = document.getElementById('modelWarn');
+    if(b.t >= 30){
+      warn.textContent = '在 ' + e + ' Wh/kg 下，320 kg 方案达到 ' + b.t.toFixed(1) + ' 分钟；MTOW ' + Math.round(b.m) + ' kg，距 880 kg 上限余 ' + (880-Math.round(b.m)) + ' kg。';
+      warn.style.color = C.teal;
+    } else {
+      warn.textContent = '尚未达到 30 分钟：320 kg 方案需要约 ' + Math.ceil((30 / 60) * b.P / (0.32 * 0.9) / 5) * 5 + ' Wh/kg。';
+      warn.style.color = C.muted;
+    }
+  }
+  if(eSlider){ eSlider.addEventListener('input', updateModel); updateModel(); }
+
+  /* ---------- figure 04: positioning ---------- */
+  function drawMap(){
+    var svg = document.getElementById('mapChart');
+    if(!svg) return;
+    svg.innerHTML = '';
+    var W=900, H=500, L=80, R=42, TP=48, B=70;
+    var xmax=200;
+    var X = function(v){ return L + v/xmax * (W-L-R); };
+    var Y = function(v){ return H-B - (v-0.5)/5 * (H-TP-B); };
+    var g = mk('g',{},svg);
+
+    /* maturity bands */
+    var bands = [
+      {a:4.5,b:5.5,c:C.greenSoft,label:'已取证 · 商业运营'},
+      {a:3.5,b:4.5,c:C.tealSoft,label:'取证后期'},
+      {a:2.5,b:3.5,c:C.amberSoft,label:'TC 待颁 / 早期'},
+      {a:1.0,b:2.5,c:C.redSoft,label:'仅测试'}
+    ];
+    bands.forEach(function(bd){
+      rect(g, L, Y(bd.b), W-L-R, Y(bd.a)-Y(bd.b), bd.c, 'none', 0).setAttribute('opacity','0.5');
+      T(g, W-R-8, (Y(bd.a)+Y(bd.b))/2+3, bd.label, {'text-anchor':'end',fill:C.muted,'font-size':8.5});
+    });
+
+    for(var yv=1; yv<=5; yv++){
+      line(g, L, Y(yv), W-R, Y(yv), C.rule2, 1);
+      T(g, L-10, Y(yv)+4, String(yv), {'text-anchor':'end'});
+    }
+    for(var xv=0; xv<=200; xv+=50){
+      line(g, X(xv), TP, X(xv), H-B, C.rule2, 1);
+      T(g, X(xv), H-B+18, String(xv), {'text-anchor':'middle'});
+    }
+    line(g, L, TP, L, H-B, C.ink, 1);
+    line(g, L, H-B, W-R, H-B, C.ink, 1);
+
+    var pts = [
+      {n:'X3-F', x:20, y:3.0, s:2, c:C.accent, dx:15, dyn:3, dyk:16, anchor:'start'},
+      {n:'EH216-S', x:30, y:5.0, s:2, c:C.teal, dx:15, dyn:-3, dyk:22, anchor:'start'},
+      {n:'Archer Midnight', x:96, y:4.0, s:5, c:C.amber, dx:0, dyn:-30, dyk:30, anchor:'middle'},
+      {n:'Joby S4', x:161, y:4.2, s:5, c:C.ink2, dx:0, dyn:-32, dyk:30, anchor:'middle'},
+      {n:'Alef Model A', x:177, y:1.5, s:1, c:C.red, dx:-14, dyn:4, dyk:17, anchor:'end'}
+    ];
+    pts.forEach(function(p){
+      var r = 9 + p.s*2.4;
+      mk('circle',{cx:X(p.x),cy:Y(p.y),r:r,fill:p.c,'fill-opacity':0.16,stroke:p.c,'stroke-width':1.5},g);
+      mk('circle',{cx:X(p.x),cy:Y(p.y),r:2,fill:p.c},g);
+      T(g, X(p.x)+p.dx, Y(p.y)+p.dyn, p.n, {fill:p.c,'font-size':10,'font-weight':'bold','text-anchor':p.anchor,'font-family':'PingFang SC, Microsoft YaHei, sans-serif'});
+      T(g, X(p.x)+p.dx, Y(p.y)+p.dyk, p.x+' km', {fill:C.muted,'font-size':8.5,'text-anchor':p.anchor});
+    });
+
+    T(g, W-R, H-24, '公开航程 km →', {'text-anchor':'end',fill:C.ink2,'font-size':9.5});
+    T(g, L, TP-16, '商业化成熟度（1 仅测试 — 5 四证齐全）', {fill:C.ink2,'font-size':9.5});
+    T(g, W-R, TP-16, '气泡大小 = 座位数', {'text-anchor':'end',fill:C.muted,'font-size':8.5});
+  }
+
+  drawEnvelope();
+  drawMap();
+  if(eSlider) updateModel();
+  window.addEventListener('resize', function(){
+    if(window.innerWidth > 700){ drawEnvelope(); drawMap(); if(eSlider) updateModel(); }
+  });
+})();
+</script>
+</body>
+</html>
